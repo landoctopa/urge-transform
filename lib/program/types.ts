@@ -53,35 +53,20 @@ export interface NodeAI {
 export interface ProgramNode {
   key: string;
   role: NodeRole;
-
   container: NodeContainer;
-
   sequence: number;
-
-  component_key: string;
-
+  component: string;
   title: string;
-
   description?: string;
-
   behavioralIntent: string;
-
   context?: string[];
-
   dependencies?: string[];
-
   outputs?: string[];
-
   interaction?: NodeInteraction;
-
   ai?: NodeAI;
-
   resources?: NodeResource[];
-
   stories?: NodeStory[];
-
   assets?: NodeAssets;
-
   metadata?: Record<string, unknown>;
 }
 

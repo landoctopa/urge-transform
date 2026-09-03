@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react';
+import type { ProgramNode } from './types';
 
 import { SituationExplorer } from '@/components/program/mission1/SituationExplorer';
 import { WhyHaventYouStarted } from '@/components/program/mission1/WhyHaventYouStarted';
@@ -9,7 +10,7 @@ import { CommitmentSynthesis } from '@/components/program/mission1/CommitmentSyn
 import { MinimumCommitment } from '@/components/program/mission1/MinimumCommitment';
 
 export interface ProgramComponentProps {
-  node: import('./types').ProgramNode;
+  node: ProgramNode;
 
   context: Record<string, unknown>;
 
@@ -19,13 +20,18 @@ export interface ProgramComponentProps {
     aiData?: Record<string, unknown>;
   };
 
-  onComplete: (result?: Record<string, unknown>) => Promise<void>;
+  onComplete: (
+    result?: Record<string, unknown>
+  ) => Promise<void>;
 }
 
 export type ProgramComponent =
   ComponentType<ProgramComponentProps>;
 
-export const componentRegistry: Record<string, ProgramComponent> = {
+export const componentRegistry: Record<
+  string,
+  ProgramComponent
+> = {
   situation_explorer: SituationExplorer,
   why_havent_you_started: WhyHaventYouStarted,
   motivation_explorer: MotivationExplorer,
@@ -35,14 +41,15 @@ export const componentRegistry: Record<string, ProgramComponent> = {
   minimum_commitment: MinimumCommitment,
 };
 
+
 export function getProgramComponent(
-  componentKey: string,
+  componentKey: string
 ): ProgramComponent {
   const component = componentRegistry[componentKey];
 
   if (!component) {
     throw new Error(
-      `Unknown program component: ${componentKey}`,
+      `Unknown program component: ${componentKey}`
     );
   }
 
