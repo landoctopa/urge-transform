@@ -1,39 +1,50 @@
-// lib/program/componentRegistry.ts
+import type { ComponentType } from 'react';
 
-import * as Mission1 from '@/components/program/mission1';
+import { SituationExplorer } from '@/components/program/mission1/SituationExplorer';
+import { WhyHaventYouStarted } from '@/components/program/mission1/WhyHaventYouStarted';
+import { MotivationExplorer } from '@/components/program/mission1/MotivationExplorer';
+import { FutureStateExplorer } from '@/components/program/mission1/FutureStateExplorer';
+import { QuitConditionExplorer } from '@/components/program/mission1/QuitConditionExplorer';
+import { CommitmentSynthesis } from '@/components/program/mission1/CommitmentSynthesis';
+import { MinimumCommitment } from '@/components/program/mission1/MinimumCommitment';
 
-export const programComponentRegistry = {
-  // Mission 1
-  situation_explorer: Mission1.SituationExplorer,
-  why_havent_you_started: Mission1.WhyHaventYouStarted,
-  motivation_explorer: Mission1.MotivationExplorer,
-  future_state_explorer: Mission1.FutureStateExplorer,
-  quit_condition_explorer: Mission1.QuitConditionExplorer,
+export interface ProgramComponentProps {
+  node: import('./types').ProgramNode;
 
-  commitment_synthesis: Mission1.CommitmentSynthesis,
-  minimum_commitment: Mission1.MinimumCommitment,
+  context: Record<string, unknown>;
 
-  deficit_explorer: Mission1.DeficitExplorer,        // Note: your earlier file had "DeficitExplorer"
-  resource_inventory: Mission1.ResourceInventory,
-  network_mapper: Mission1.NetworkMapper,
-  capability_inventory: Mission1.CapabilityInventory,
-  experience_miner: Mission1.ExperienceMiner,
-  starting_assets_reveal: Mission1.StartingAssetsReveal,
-  gap_action_planner: Mission1.GapActionPlanner,
+  progress: {
+    status: 'not_started' | 'in_progress' | 'completed';
+    payload: Record<string, unknown>;
+    aiData?: Record<string, unknown>;
+  };
 
-  ask_readiness: Mission1.AskReadiness,
-  squad_builder: Mission1.SquadBuilder,
-  visibility_action: Mission1.VisibilityAction,
-  real_world_ask: Mission1.RealWorldAsk,
-  ask_confidence_reveal: Mission1.AskConfidenceReveal,
-  asker_debrief: Mission1.AskerDebrief,
+  onComplete: (result?: Record<string, unknown>) => Promise<void>;
+}
 
-  fear_explorer: Mission1.FearExplorer,
-  low_threshold_ask: Mission1.LowThresholdAsk,
-  fear_challenge: Mission1.FearChallenge,
-  fear_evidence_reveal: Mission1.FearEvidenceReveal,
-  fear_audit: Mission1.FearAudit,
+export type ProgramComponent =
+  ComponentType<ProgramComponentProps>;
 
-  mission_transformation: Mission1.MissionTransformation,
-  mission_commitment: Mission1.MissionCommitment,
-} as const;
+export const componentRegistry: Record<string, ProgramComponent> = {
+  situation_explorer: SituationExplorer,
+  why_havent_you_started: WhyHaventYouStarted,
+  motivation_explorer: MotivationExplorer,
+  future_state_explorer: FutureStateExplorer,
+  quit_condition_explorer: QuitConditionExplorer,
+  commitment_synthesis: CommitmentSynthesis,
+  minimum_commitment: MinimumCommitment,
+};
+
+export function getProgramComponent(
+  componentKey: string,
+): ProgramComponent {
+  const component = componentRegistry[componentKey];
+
+  if (!component) {
+    throw new Error(
+      `Unknown program component: ${componentKey}`,
+    );
+  }
+
+  return component;
+}

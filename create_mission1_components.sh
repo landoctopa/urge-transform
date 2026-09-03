@@ -1,11 +1,7 @@
 #!/bin/bash
 
-# create_mission1_components.sh
-# Generates one file per Mission 1 component in ./components/program/mission1/
+set -e
 
-set -e  # exit on error
-
-# Component names (from your registry)
 COMPONENTS=(
   "SituationExplorer"
   "WhyHaventYouStarted"
@@ -36,27 +32,27 @@ COMPONENTS=(
   "MissionCommitment"
 )
 
-# Target directory
 TARGET_DIR="./components/program/mission1"
-
-# Create the directory if it doesn't exist
 mkdir -p "$TARGET_DIR"
 
-# Generate each component file
-for component in "${COMPONENTS[@]}"; do
-  FILE="${TARGET_DIR}/${component}.tsx"
+for comp in "${COMPONENTS[@]}"; do
+  FILE="${TARGET_DIR}/${comp}.tsx"
   cat > "$FILE" <<EOF
 import React from 'react';
+import type { ProgramComponentProps } from '@/lib/program/componentRegistry';
 
-interface Props {
-  title?: string;
-}
+const ${comp}: React.FC<ProgramComponentProps> = ({
+  node,
+  context,
+  progress,
+  onComplete,
+  ...rest
+}) => {
+  const title = node?.title || '${comp}';
+  return <div>{title}</div>;
+};
 
-const ${component}: React.FC<Props> = ({ title }) => (
-  <div>{title || '${component}'}</div>
-);
-
-export default ${component};
+export const ${comp};
 EOF
   echo "Created $FILE"
 done
@@ -64,9 +60,9 @@ done
 # Generate index.ts
 INDEX_FILE="${TARGET_DIR}/index.ts"
 cat > "$INDEX_FILE" <<EOF
-// Auto‑generated index for Mission 1 components
+// Auto-generated index for Mission 1 components
 $(for comp in "${COMPONENTS[@]}"; do echo "export { default as $comp } from './$comp';"; done)
 EOF
 
 echo "Created $INDEX_FILE"
-echo "Done. All Mission 1 components are scaffolded in $TARGET_DIR"
+echo "Done."
