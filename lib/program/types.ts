@@ -1,49 +1,12 @@
-// types.ts
+export type NodeRole =
+  | 'question'
+  | 'situation'
+  | 'complication'
+  | 'investigation'
+  | 'reveal'
+  | 'decision';
 
-// ------------------------------------------------------------------
-// Core Mission Type
-// ------------------------------------------------------------------
-
-export interface ProgramMission {
-  key: string;
-  version: number;
-  title: string;
-  sequence: number;
-  bigQuestion: string;
-  description: string;
-  estimatedDays: number;
-  assets: {
-    video: string | null;   // URL
-    audio: string | null;   // URL
-  };
-  context: string[];        // e.g., 'user.profile', 'user.opportunities', ...
-  nodes: ProgramNode[];
-}
-
-// ------------------------------------------------------------------
-// Node Types
-// ------------------------------------------------------------------
-
-export type NodeRole = 'situation' | 'complication' | 'investigation' | 'reveal' | 'decision';
-
-export interface Container {
-  type: 'mission' | 'quest';
-  key: string;
-}
-
-export interface NodeMetadata {
-  canCreateOpportunity?: boolean;
-  allowMultipleOpportunities?: boolean;
-  nextMission?: string;              // only on mission-level decision nodes
-  readinessReassessment?: boolean;
-  accountabilityCheck?: boolean;
-}
-
-export interface AI {
-  enabled: boolean;
-  purpose: string;                   // e.g., 'synthesize', 'compare_perceived_and_actual_assets', ...
-  persistResponse: boolean;
-}
+export type ContainerType = 'mission' | 'quest';
 
 export type InteractionType =
   | 'conversation'
@@ -53,52 +16,101 @@ export type InteractionType =
   | 'ai_personalized'
   | 'ai_personalized_real_world_action';
 
-export interface Interaction {
+export interface NodeContainer {
+  type: ContainerType;
+  key: string;
+}
+
+export interface NodeResource {
+  key: string;
+  type: 'guide' | 'template' | 'tool' | 'worksheet' | 'article';
+  required?: boolean;
+}
+
+export interface NodeStory {
+  key: string;
+  type: 'founder_story' | 'contextual' | 'case_study';
+  required?: boolean;
+}
+
+export interface NodeAssets {
+  video?: string | null;
+  audio?: string | null;
+}
+
+export interface NodeInteraction {
   type: InteractionType;
-  requiresReturn: boolean;
-  reflection: boolean;
+  requiresReturn?: boolean;
+  reflection?: boolean;
+}
+
+export interface NodeAI {
+  enabled: boolean;
+  purpose?: string;
+  persistResponse?: boolean;
 }
 
 export interface ProgramNode {
   key: string;
   role: NodeRole;
-  container: Container;
+
+  container: NodeContainer;
+
   sequence: number;
-  component: string;                 // e.g., 'situation_explorer', 'why_havent_you_started', ...
+
+  component_key: string;
+
   title: string;
+
+  description?: string;
+
   behavioralIntent: string;
-  context: string[];                // list of context keys needed
-  dependencies: string[];           // node keys that must be completed before this one
-  outputs: string[];                // output keys (e.g., 'user_profile.mission_starting_point')
-  metadata?: NodeMetadata;
-  resources: Resource[];            // can be empty array
-  stories: Story[];                 // can be empty array
-  ai?: AI;                          // usually present on reveal nodes
-  interaction?: Interaction;        // present on real-world action nodes
+
+  context?: string[];
+
+  dependencies?: string[];
+
+  outputs?: string[];
+
+  interaction?: NodeInteraction;
+
+  ai?: NodeAI;
+
+  resources?: NodeResource[];
+
+  stories?: NodeStory[];
+
+  assets?: NodeAssets;
+
+  metadata?: Record<string, unknown>;
 }
 
-// ------------------------------------------------------------------
-// Resource Type
-// ------------------------------------------------------------------
-
-export interface Resource {
+export interface ProgramQuest {
   key: string;
-  type: 'guide' | 'template' | 'tool';   // extend if needed
-  required: boolean;
-  title?: string;   // may be provided, but not always
-  url?: string;     // may be provided, but not always
+  title: string;
+  sequence: number;
+  description?: string;
+  bigQuestion?: string;
 }
 
-// ------------------------------------------------------------------
-// Story Type
-// ------------------------------------------------------------------
-
-export interface Story {
+export interface ProgramMission {
   key: string;
-  type: 'contextual' | 'founder_story' | string;   // allow other strings
-  required: boolean;
-  title?: string;        // optional
-  description?: string;  // optional
-  content_id?: string;   // optional
-  relevance?: string;    // optional
+  version: number;
+
+  title: string;
+  description: string;
+
+  sequence: number;
+
+  bigQuestion?: string;
+
+  estimatedDays?: number;
+
+  context?: string[];
+
+  assets?: NodeAssets;
+
+  quests?: ProgramQuest[];
+
+  nodes: ProgramNode[];
 }
