@@ -45,8 +45,16 @@ export interface AI {
   persistResponse: boolean;
 }
 
+export type InteractionType =
+  | 'conversation'
+  | 'structured_form'
+  | 'reflection'
+  | 'real_world_action'
+  | 'ai_personalized'
+  | 'ai_personalized_real_world_action';
+
 export interface Interaction {
-  type: 'real_world_action' | 'ai_personalized_real_world_action';
+  type: InteractionType;
   requiresReturn: boolean;
   reflection: boolean;
 }
