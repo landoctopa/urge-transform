@@ -1,88 +1,24 @@
-# Program Implementation Structure
-
-## 1. Program Model
+It is still stuck.
+## Browser console
 ```
-mission1.ts
-      ↓
-ProgramMission
-      ↓
-ProgramNode
-
-```
-
-## 2. Component System
-```
-componentRegistry
-      ↓
-node.component
-      ↓
-React component
-```
-
-## 3. Context System
-```
-node.context[]
-      ↓
-Context Manager
-      ↓
-Component receives exactly
-the context it requested
-```
-
-## 4. Progress system
-```
-node.key
-      ↓
-user_progress
-      ↓
-started / active / completed
-      ↓
-payload + ai_data
-```
-
-## 5. Domain data
-```
-component
-    ↓
-user_profile
-user_opportunities
-user_contacts
-user_observations
-user_tasks
-```
-
-
-## 6. Navigation
-```
-Mission page
-    ↓
-Quest page
-    ↓
-Node experience
-```
-
-**That gives us a clean dependency direction:**
-```
-
-                 ┌──────────────┐
-                 │ mission1.ts  │
-                 └──────┬───────┘
-                        ↓
-                 ┌──────────────┐
-                 │ ProgramNode  │
-                 └──────┬───────┘
-                        ↓
-              ┌───────────────────┐
-              │ Component Registry│
-              └─────────┬─────────┘
-                        ↓
-                 ┌──────────────┐
-                 │   Component  │
-                 └──────┬───────┘
-                        ↓
-          ┌─────────────┼─────────────┐
-          ↓             ↓             ↓
-      Context       Progress       Domain
-      Manager        Service         Data
+forward-logs-shared.ts:120 [HMR] connected
+ProgramQuestShell.tsx:178 [PROGRAM TRANSITION] {currentNode: 'm1-q1-complication', completed: Array(2), destination: {…}}completed: (2) ['m1-situation', 'm1-q1-complication']currentNode: "m1-q1-complication"destination: {type: 'quest', missionId: 'mission-1', questId: 'm1-q1', nodeKey: 'm1-q1-motivation'}[[Prototype]]: Object
+ProgramQuestShell.tsx:178 [PROGRAM TRANSITION] {currentNode: 'm1-q1-complication', completed: Array(2), destination: {…}}completed: (2) ['m1-situation', 'm1-q1-complication']currentNode: "m1-q1-complication"destination: {type: 'quest', missionId: 'mission-1', questId: 'm1-q1', nodeKey: 'm1-q1-motivation'}[[Prototype]]: Object
+ProgramQuestShell.tsx:178 [PROGRAM TRANSITION] {currentNode: 'm1-q1-complication', completed: Array(2), destination: {…}}completed: (2) ['m1-situation', 'm1-q1-complication']currentNode: "m1-q1-complication"destination: {type: 'quest', missionId: 'mission-1', questId: 'm1-q1', nodeKey: 'm1-q1-motivation'}[[Prototype]]: Object
+ProgramQuestShell.tsx:178 [PROGRAM TRANSITION] {currentNode: 'm1-q1-complication', completed: Array(2), destination: {…}}completed: (2) ['m1-situation', 'm1-q1-complication']currentNode: "m1-q1-complication"destination: {type: 'quest', missionId: 'mission-1', questId: 'm1-q1', nodeKey: 'm1-q1-motivation'}[[Prototype]]: Object
+ProgramQuestShell.tsx:178 [PROGRAM TRANSITION] {currentNode: 'm1-q1-complication', completed: Array(2), destination: {…}}
+ProgramQuestShell.tsx:178 [PROGRAM TRANSITION] {currentNode: 'm1-q1-complication', completed: Array(2), destination: {…}}completed: (2) ['m1-situation', 'm1-q1-complication']currentNode: "m1-q1-complication"destination: {type: 'quest', missionId: 'mission-1', questId: 'm1-q1', nodeKey: 'm1-q1-motivation'}[[Prototype]]: Objectconstructor: ƒ Object()hasOwnProperty: ƒ hasOwnProperty()isPrototypeOf: ƒ isPrototypeOf()propertyIsEnumerable: ƒ propertyIsEnumerable()toLocaleString: ƒ toLocaleString()toString: ƒ toString()valueOf: ƒ valueOf()__defineGetter__: ƒ __defineGetter__()__defineSetter__: ƒ __defineSetter__()__lookupGetter__: ƒ __lookupGetter__()__lookupSetter__: ƒ __lookupSetter__()__proto__: (...)get __proto__: ƒ __proto__()set __proto__: ƒ __proto__()
 
 ```
+
+## Server Console
+ GET /program/mission/mission-1/quest/m1-q1?node=m1-q1-complication 200 in 74ms (next.js: 28ms, application-code: 46ms)
+ GET /program/mission/mission-1/quest/m1-q1?node=m1-q1-motivation 200 in 48ms (next.js: 20ms, application-code: 27ms)
+ GET /program/mission/mission-1/quest/m1-q1?node=m1-q1-motivation 200 in 44ms (next.js: 18ms, application-code: 25ms)
+ GET /program/mission/mission-1/quest/m1-q1?node=m1-q1-motivation 200 in 46ms (next.js: 20ms, application-code: 27ms)
+ GET /program/mission/mission-1/quest/m1-q1?node=m1-q1-motivation 200 in 52ms (next.js: 21ms, application-code: 31ms)
+ GET /program/mission/mission-1/quest/m1-q1?node=m1-q1-motivation 200 in 49ms (next.js: 20ms, application-code: 29ms)
+ GET /program/mission/mission-1/quest/m1-q1?node=m1-q1-motivation 200 in 50ms (next.js: 20ms, application-code: 30ms)
+
+
+There should be a simpler solution to this.

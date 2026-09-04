@@ -5,24 +5,18 @@ import type { ProgramMission } from '@/lib/program/types';
 const mission1: ProgramMission = {
   key: 'mission-1',
   version: 1,
-
   title: 'Move Before Ready',
-
   sequence: 1,
-
   bigQuestion:
     'Can you become someone who moves before they feel ready?',
 
   description:
     "Most people don't fail to start because they don't have an idea. They fail to start because starting asks them to act before they feel ready. This mission is about finding out what is really holding you back, seeing what you already have, asking for help, facing discomfort, and proving to yourself that you can move anyway.",
-
   estimatedDays: 14,
-
   assets: {
     video: null,
     audio: null,
   },
-
   context: [
     'user.profile',
     'user.opportunities',

@@ -81,7 +81,11 @@ export function getCurrentNode(
   if (progress.currentNodeKey) {
     const current = nodes.find(
       (node) =>
-        node.key === progress.currentNodeKey,
+        node.key === progress.currentNodeKey &&
+        !isNodeCompleted(
+          progress,
+          node.key,
+        ),
     );
 
     if (current) {
@@ -89,13 +93,17 @@ export function getCurrentNode(
     }
   }
 
-  /*
-   * Otherwise find the first incomplete node
-   * whose dependencies have been satisfied.
-   */
   return (
-    nodes.find((node) =>
-      canEnterNode(node, progress),
+    nodes.find(
+      (node) =>
+        !isNodeCompleted(
+          progress,
+          node.key,
+        ) &&
+        canEnterNode(
+          node,
+          progress,
+        ),
     ) ?? null
   );
 }
