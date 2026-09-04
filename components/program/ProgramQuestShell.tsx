@@ -1,6 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+
 import { useRouter } from 'next/navigation';
 
 import type {
@@ -8,11 +13,21 @@ import type {
   ProgramNode,
 } from '@/lib/program/types';
 
+import type {
+  ProgramProgress,
+} from '@/lib/program/progress';
+import { getNodeProgress } from '@/lib/program/progress';
+
 import {
   getContainerNodes,
-  getNextNode,
+  getNextDestination,
   getPreviousNode,
 } from '@/lib/program/getCurrentNode';
+
+import {
+  loadProgress,
+  saveProgress,
+} from '@/lib/program/progressStore';
 
 import { ProgramNodeRenderer } from './ProgramNodeRenderer';
 
@@ -20,12 +35,14 @@ interface ProgramQuestShellProps {
   mission: ProgramMission;
   questId: string;
   initialNode: ProgramNode;
+  initialProgress: ProgramProgress;
 }
 
 export function ProgramQuestShell({
   mission,
   questId,
   initialNode,
+  initialProgress,
 }: ProgramQuestShellProps) {
   const router = useRouter();
 
@@ -39,151 +56,251 @@ export function ProgramQuestShell({
     [mission, questId],
   );
 
+  const [progress, setProgress] =
+    useState<ProgramProgress>(
+      initialProgress,
+    );
+
   const [currentNode, setCurrentNode] =
-    useState<ProgramNode>(initialNode);
+    useState<ProgramNode>(
+      initialNode,
+    );
 
-  const [completedNodeKeys, setCompletedNodeKeys] =
-    useState<string[]>([]);
+  /*
+   * Restore client-side progress.
+   *
+   * The server gives us a valid initial
+   * node; localStorage lets us resume.
+   */
+  useEffect(() => {
+    const stored = loadProgress(
+      mission.key,
+    );
 
-  const [payloadByNode, setPayloadByNode] =
-    useState<Record<string, Record<string, unknown>>>({});
+    if (!stored) {
+      return;
+    }
 
-  const currentIndex = nodes.findIndex(
-    (node) => node.key === currentNode.key,
-  );
+    setProgress(stored);
 
-  const isFirstNode = currentIndex <= 0;
-  const isLastNode =
-    currentIndex === nodes.length - 1;
+    if (stored.currentNodeKey) {
+      const storedNode =
+        nodes.find(
+          (node) =>
+            node.key ===
+            stored.currentNodeKey,
+        );
 
-  const progressPercent =
-    nodes.length > 0
-      ? ((currentIndex + 1) / nodes.length) * 100
-      : 0;
+      if (storedNode) {
+        setCurrentNode(
+          storedNode,
+        );
+      }
+    }
+  }, [mission.key, nodes]);
+
+  const currentIndex =
+    nodes.findIndex(
+      (node) =>
+        node.key ===
+        currentNode.key,
+    );
+
+  const nodeProgress =
+    getNodeProgress(
+      progress,
+      currentNode,
+    );
+
+  function updateProgress(
+    next: ProgramProgress,
+  ) {
+    setProgress(next);
+    saveProgress(next);
+  }
 
   async function handleComplete(
     result?: Record<string, unknown>,
   ) {
+    const now =
+      new Date().toISOString();
+
+    const existing =
+      progress.nodes[
+      currentNode.key
+      ];
+
+    const nextProgress: ProgramProgress = {
+      ...progress,
+
+      currentNodeKey:
+        currentNode.key,
+
+      completedNodeKeys:
+        progress.completedNodeKeys.includes(
+          currentNode.key,
+        )
+          ? progress.completedNodeKeys
+          : [
+            ...progress.completedNodeKeys,
+            currentNode.key,
+          ],
+
+      nodes: {
+        ...progress.nodes,
+
+        [currentNode.key]: {
+          nodeKey:
+            currentNode.key,
+
+          status:
+            'completed',
+
+          startedAt:
+            existing?.startedAt ??
+            now,
+
+          completedAt:
+            now,
+
+          payload:
+            result ??
+            existing?.payload ??
+            {},
+
+          aiData:
+            existing?.aiData,
+        },
+      },
+
+      updatedAt: now,
+    };
+
+    updateProgress(
+      nextProgress,
+    );
+
     /*
-     * For now this is local state only.
-     *
-     * Later this becomes:
-     *
-     *   1. save node result
-     *   2. save domain data if required
-     *   3. write user_progress
-     *   4. write ai_logs if applicable
-     *   5. resolve next node
+     * Determine the next destination
+     * using the actual mission journey.
      */
+    const destination =
+      getNextDestination(
+        mission,
+        currentNode.key,
+        nextProgress,
+      );
 
-    setCompletedNodeKeys((current) =>
-      current.includes(currentNode.key)
-        ? current
-        : [...current, currentNode.key],
-    );
+    if (
+      destination.type ===
+      'complete'
+    ) {
+      router.push(
+        `/program/mission/${mission.key}`,
+      );
 
-    if (result) {
-      setPayloadByNode((current) => ({
-        ...current,
-        [currentNode.key]: result,
-      }));
-    }
-
-    const nextNode = getNextNode(
-      mission,
-      'quest',
-      questId,
-      currentNode.key,
-    );
-
-    if (nextNode) {
-      setCurrentNode(nextNode);
       return;
     }
 
-    /*
-     * Quest is complete.
-     *
-     * For now return to the mission page.
-     * Later this will also persist quest completion.
-     */
+    if (
+      destination.type ===
+      'mission'
+    ) {
+      router.push(
+        `/program/mission/${destination.missionId}?node=${destination.nodeKey}`,
+      );
+
+      return;
+    }
+
     router.push(
-      `/program/mission/${mission.key}`,
+      `/program/mission/${destination.missionId}/quest/${destination.questId}?node=${destination.nodeKey}`,
     );
   }
 
   function handleBack() {
-    const previousNode = getPreviousNode(
-      mission,
-      'quest',
-      questId,
-      currentNode.key,
-    );
+    const previous =
+      getPreviousNode(
+        mission,
+        currentNode.key,
+      );
 
-    if (previousNode) {
-      setCurrentNode(previousNode);
+    if (!previous) {
+      return;
     }
+
+    /*
+     * Only allow back navigation within
+     * the current quest.
+     *
+     * We don't want a Quest page suddenly
+     * taking the user back into a mission
+     * node or previous quest.
+     */
+    if (
+      previous.container.type !==
+      'quest' ||
+      previous.container.key !==
+      questId
+    ) {
+      return;
+    }
+
+    setCurrentNode(
+      previous,
+    );
   }
 
   return (
     <div className="space-y-8">
-
-      {/* Quest progress */}
-
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
-            Step {currentIndex + 1} of {nodes.length}
+            Step {currentIndex + 1} of{' '}
+            {nodes.length}
           </span>
 
           <span>
-            {Math.round(progressPercent)}%
+            {Math.round(
+              ((currentIndex + 1) /
+                nodes.length) *
+              100,
+            )}
+            %
           </span>
         </div>
 
         <div className="h-1.5 overflow-hidden rounded-full bg-muted">
           <div
-            className="h-full rounded-full bg-primary transition-all duration-300"
+            className="h-full rounded-full bg-primary transition-all"
             style={{
-              width: `${progressPercent}%`,
+              width: `${((currentIndex + 1) /
+                  nodes.length) *
+                100
+                }%`,
             }}
           />
         </div>
       </div>
 
-      {/* Current node */}
-
       <ProgramNodeRenderer
         node={currentNode}
         context={{}}
-        progress={{
-          status: completedNodeKeys.includes(
-            currentNode.key,
-          )
-            ? 'completed'
-            : 'in_progress',
-
-          payload:
-            payloadByNode[currentNode.key] ?? {},
-        }}
-        onComplete={handleComplete}
+        progress={nodeProgress}
+        onComplete={
+          handleComplete
+        }
       />
 
-      {/* Navigation */}
-
-      {!isFirstNode && (
-        <div>
-          <button
-            type="button"
-            onClick={handleBack}
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            ← Back
-          </button>
-        </div>
+      {currentIndex > 0 && (
+        <button
+          type="button"
+          onClick={handleBack}
+          className="text-sm text-muted-foreground hover:text-foreground"
+        >
+          ← Back
+        </button>
       )}
-
-      {/* Debug information — remove later */}
 
       <details className="rounded-lg border p-4">
         <summary className="cursor-pointer text-sm font-medium">
@@ -193,10 +310,16 @@ export function ProgramQuestShell({
         <pre className="mt-4 overflow-auto text-xs">
           {JSON.stringify(
             {
-              currentNode: currentNode.key,
-              completedNodeKeys,
-              payloadByNode,
-              isLastNode,
+              currentNode:
+                currentNode.key,
+              completed:
+                progress.completedNodeKeys,
+              destination:
+                getNextDestination(
+                  mission,
+                  currentNode.key,
+                  progress,
+                ),
             },
             null,
             2,

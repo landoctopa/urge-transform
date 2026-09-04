@@ -70,32 +70,16 @@ export interface ProgramNode {
   metadata?: Record<string, unknown>;
 }
 
-export interface ProgramQuest {
-  key: string;
-  title: string;
-  sequence: number;
-  description?: string;
-  bigQuestion?: string;
-}
 
 export interface ProgramMission {
   key: string;
   version: number;
-
   title: string;
   description: string;
-
   sequence: number;
-
   bigQuestion?: string;
-
   estimatedDays?: number;
-
   context?: string[];
-
   assets?: NodeAssets;
-
-  quests?: ProgramQuest[];
-
   nodes: ProgramNode[];
 }

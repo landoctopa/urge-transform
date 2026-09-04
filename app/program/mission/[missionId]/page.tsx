@@ -1,30 +1,91 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { getMission } from '@/lib/program/getMission';
+import {
+  getMission,
+} from '@/lib/program/getMission';
+
+import {
+  getContainerNodes,
+  getNode,
+} from '@/lib/program/getCurrentNode';
+
+import {
+  createInitialProgress,
+} from '@/lib/program/progress';
+
+import {
+  ProgramMissionShell,
+} from '@/components/program/ProgramMissionShell';
 
 interface MissionPageProps {
   params: Promise<{
     missionId: string;
   }>;
+
+  searchParams: Promise<{
+    node?: string;
+  }>;
 }
 
 export default async function MissionPage({
   params,
+  searchParams,
 }: MissionPageProps) {
-  const { missionId } = await params;
+  const { missionId } =
+    await params;
 
-  const mission = getMission(missionId);
+  const { node: nodeKey } =
+    await searchParams;
+
+  const mission =
+    getMission(missionId);
 
   if (!mission) {
     notFound();
   }
 
+  const missionNodes =
+    getContainerNodes(
+      mission,
+      'mission',
+      mission.key,
+    );
+
+  if (missionNodes.length === 0) {
+    notFound();
+  }
+
+  let initialNode;
+
+  if (nodeKey) {
+    initialNode =
+      getNode(
+        mission,
+        nodeKey,
+      );
+
+    if (
+      !initialNode ||
+      initialNode.container.type !==
+        'mission'
+    ) {
+      notFound();
+    }
+  } else {
+    initialNode =
+      missionNodes[0];
+  }
+
+  const progress =
+    createInitialProgress(
+      mission.key,
+    );
+
   return (
     <main className="min-h-screen px-6 py-12">
-      <div className="mx-auto max-w-4xl space-y-12">
-        <header className="space-y-5">
-          <p className="text-sm font-medium text-muted-foreground">
+      <div className="mx-auto max-w-3xl">
+        <header className="mb-10 space-y-4">
+          <p className="text-sm text-muted-foreground">
             Mission {mission.sequence}
           </p>
 
@@ -32,46 +93,26 @@ export default async function MissionPage({
             {mission.title}
           </h1>
 
-          <p className="max-w-2xl text-lg text-muted-foreground">
+          <p className="text-lg text-muted-foreground">
             {mission.description}
           </p>
 
           {mission.bigQuestion && (
-            <blockquote className="max-w-2xl border-l-2 pl-6 text-xl italic">
+            <blockquote className="border-l-2 pl-5 text-xl italic">
               {mission.bigQuestion}
             </blockquote>
           )}
         </header>
 
-        <section className="space-y-5">
-          <h2 className="text-2xl font-semibold">
-            Your quests
-          </h2>
-
-          <div className="grid gap-4">
-            {mission.quests?.map((quest) => (
-              <Link
-                key={quest.key}
-                href={`/program/mission/${mission.key}/quest/${quest.key}`}
-                className="rounded-xl border p-6 transition-colors hover:bg-muted"
-              >
-                <p className="text-sm text-muted-foreground">
-                  Quest {quest.sequence}
-                </p>
-
-                <h3 className="mt-1 text-xl font-semibold">
-                  {quest.title}
-                </h3>
-
-                {quest.description && (
-                  <p className="mt-2 text-muted-foreground">
-                    {quest.description}
-                  </p>
-                )}
-              </Link>
-            ))}
-          </div>
-        </section>
+        <ProgramMissionShell
+          mission={mission}
+          initialNode={
+            initialNode
+          }
+          initialProgress={
+            progress
+          }
+        />
       </div>
     </main>
   );

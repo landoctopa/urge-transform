@@ -1,88 +1,146 @@
 import { notFound } from 'next/navigation';
 
-import { ProgramNodeRenderer } from '@/components/program/ProgramNodeRenderer';
-import { getMission } from '@/lib/program/getMission';
-import { getCurrentNode } from '@/lib/program/getCurrentNode';
+import {
+  getMission,
+} from '@/lib/program/getMission';
+
+import {
+  getContainerNodes,
+  getNode,
+} from '@/lib/program/getCurrentNode';
+
+import {
+  createInitialProgress,
+} from '@/lib/program/progress';
+
+import {
+  ProgramQuestShell,
+} from '@/components/program/ProgramQuestShell';
 
 interface QuestPageProps {
   params: Promise<{
     missionId: string;
     questId: string;
   }>;
+
+  searchParams: Promise<{
+    node?: string;
+  }>;
 }
 
 export default async function QuestPage({
   params,
+  searchParams,
 }: QuestPageProps) {
-  const { missionId, questId } = await params;
+  const {
+    missionId,
+    questId,
+  } = await params;
 
-  const mission = getMission(missionId);
+  const {
+    node: nodeKey,
+  } = await searchParams;
+
+  const mission =
+    getMission(missionId);
 
   if (!mission) {
     notFound();
   }
 
-  const quest = mission.quests?.find(
-    (item) => item.key === questId
-  );
+  const quest =
+    mission.quests?.find(
+      (item) =>
+        item.key === questId,
+    );
 
+  /*
+   * If quests are currently represented
+   * only by node containers in mission1.ts,
+   * derive a minimal quest representation
+   * from the nodes.
+   */
   if (!quest) {
+    const questNodes =
+      getContainerNodes(
+        mission,
+        'quest',
+        questId,
+      );
+
+    if (questNodes.length === 0) {
+      notFound();
+    }
+  }
+
+  const questNodes =
+    getContainerNodes(
+      mission,
+      'quest',
+      questId,
+    );
+
+  if (questNodes.length === 0) {
     notFound();
   }
 
-  // Temporary until user_progress exists.
-  const progress = {
-    currentNodeKey: undefined,
-    completedNodeKeys: [],
-  };
+  let initialNode;
 
-  const currentNode = getCurrentNode(
-    mission,
-    questId,
-    progress
-  );
+  if (nodeKey) {
+    initialNode =
+      getNode(
+        mission,
+        nodeKey,
+      );
 
-  if (!currentNode) {
-    notFound();
+    if (
+      !initialNode ||
+      initialNode.container.type !==
+        'quest' ||
+      initialNode.container.key !==
+        questId
+    ) {
+      notFound();
+    }
+  } else {
+    initialNode =
+      questNodes[0];
   }
+
+  const progress =
+    createInitialProgress(
+      mission.key,
+    );
 
   return (
     <main className="min-h-screen px-6 py-12">
-      <div className="mx-auto max-w-3xl space-y-8">
-        <header className="space-y-2">
+      <div className="mx-auto max-w-3xl">
+        <header className="mb-10 space-y-3">
           <p className="text-sm text-muted-foreground">
-            Mission {mission.sequence} · Quest {quest.sequence}
+            Mission {mission.sequence}
           </p>
 
           <h1 className="text-3xl font-semibold">
-            {quest.title}
+            {quest?.title ??
+              questId}
           </h1>
 
-          {quest.description && (
+          {quest?.description && (
             <p className="text-muted-foreground">
               {quest.description}
             </p>
           )}
         </header>
 
-        <div className="text-sm text-muted-foreground">
-          Step {currentNode.sequence}
-        </div>
-
-        <ProgramNodeRenderer
-          node={currentNode}
-          context={{}}
-          progress={{
-            status: 'not_started',
-            payload: {},
-          }}
-          onComplete={async (result) => {
-            console.log(
-              'Completed:',
-              currentNode.key,
-              result
-            );
-          }}
+        <ProgramQuestShell
+          mission={mission}
+          questId={questId}
+          initialNode={
+            initialNode
+          }
+          initialProgress={
+            progress
+          }
         />
       </div>
     </main>

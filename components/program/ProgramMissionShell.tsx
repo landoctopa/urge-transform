@@ -1,6 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+
 import { useRouter } from 'next/navigation';
 
 import type {
@@ -8,26 +13,36 @@ import type {
   ProgramNode,
 } from '@/lib/program/types';
 
+import type { ProgramProgress } from '@/lib/program/progress';
+import { getNodeProgress } from '@/lib/program/progress';
+
 import {
   getContainerNodes,
-  getNextNode,
+  getNextDestination,
   getPreviousNode,
 } from '@/lib/program/getCurrentNode';
+
+import {
+  loadProgress,
+  saveProgress,
+} from '@/lib/program/progressStore';
 
 import { ProgramNodeRenderer } from './ProgramNodeRenderer';
 
 interface ProgramMissionShellProps {
   mission: ProgramMission;
   initialNode: ProgramNode;
+  initialProgress: ProgramProgress;
 }
 
 export function ProgramMissionShell({
   mission,
   initialNode,
+  initialProgress,
 }: ProgramMissionShellProps) {
   const router = useRouter();
 
-  const missionNodes = useMemo(
+  const nodes = useMemo(
     () =>
       getContainerNodes(
         mission,
@@ -37,125 +52,194 @@ export function ProgramMissionShell({
     [mission],
   );
 
+  const [progress, setProgress] =
+    useState<ProgramProgress>(
+      initialProgress,
+    );
+
   const [currentNode, setCurrentNode] =
-    useState<ProgramNode>(initialNode);
+    useState<ProgramNode>(
+      initialNode,
+    );
 
-  const [completedNodeKeys, setCompletedNodeKeys] =
-    useState<string[]>([]);
+  useEffect(() => {
+    const stored = loadProgress(
+      mission.key,
+    );
 
-  const [payloadByNode, setPayloadByNode] =
-    useState<Record<string, Record<string, unknown>>>({});
+    if (!stored) {
+      return;
+    }
 
-  const currentIndex = missionNodes.findIndex(
-    (node) => node.key === currentNode.key,
-  );
+    setProgress(stored);
+
+    if (stored.currentNodeKey) {
+      const storedNode =
+        nodes.find(
+          (node) =>
+            node.key ===
+            stored.currentNodeKey,
+        );
+
+      if (storedNode) {
+        setCurrentNode(
+          storedNode,
+        );
+      }
+    }
+  }, [mission.key, nodes]);
+
+  const currentIndex =
+    nodes.findIndex(
+      (node) =>
+        node.key ===
+        currentNode.key,
+    );
+
+  const nodeProgress =
+    getNodeProgress(
+      progress,
+      currentNode,
+    );
+
+  function updateProgress(
+    next: ProgramProgress,
+  ) {
+    setProgress(next);
+    saveProgress(next);
+  }
 
   async function handleComplete(
     result?: Record<string, unknown>,
   ) {
-    setCompletedNodeKeys((current) =>
-      current.includes(currentNode.key)
-        ? current
-        : [...current, currentNode.key],
+    const now =
+      new Date().toISOString();
+
+    const existing =
+      progress.nodes[
+      currentNode.key
+      ];
+
+    const nextProgress: ProgramProgress = {
+      ...progress,
+
+      currentNodeKey:
+        currentNode.key,
+
+      completedNodeKeys:
+        progress.completedNodeKeys.includes(
+          currentNode.key,
+        )
+          ? progress.completedNodeKeys
+          : [
+            ...progress.completedNodeKeys,
+            currentNode.key,
+          ],
+
+      nodes: {
+        ...progress.nodes,
+
+        [currentNode.key]: {
+          nodeKey:
+            currentNode.key,
+
+          status:
+            'completed',
+
+          startedAt:
+            existing?.startedAt ??
+            now,
+
+          completedAt:
+            now,
+
+          payload:
+            result ??
+            existing?.payload ??
+            {},
+
+          aiData:
+            existing?.aiData,
+        },
+      },
+
+      updatedAt: now,
+    };
+
+    updateProgress(
+      nextProgress,
     );
 
-    if (result) {
-      setPayloadByNode((current) => ({
-        ...current,
-        [currentNode.key]: result,
-      }));
+    const destination =
+      getNextDestination(
+        mission,
+        currentNode.key,
+        nextProgress,
+      );
+
+    if (
+      destination.type ===
+      'complete'
+    ) {
+      /*
+       * Mission finished.
+       *
+       * We leave the mission page in
+       * place for now. The final decision
+       * component can eventually control
+       * what happens after completion.
+       */
+      return;
     }
 
-    /*
-     * Mission nodes do not necessarily lead to
-     * another mission node.
-     *
-     * A mission node can hand the user into a quest.
-     *
-     * That transition is defined by the mission
-     * structure rather than by the component.
-     */
+    if (
+      destination.type ===
+      'mission'
+    ) {
+      setCurrentNode(
+        mission.nodes.find(
+          (node) =>
+            node.key ===
+            destination.nodeKey,
+        )!,
+      );
 
-    const nextNode = getNextNode(
-      mission,
-      'mission',
-      mission.key,
-      currentNode.key,
-    );
-
-    if (nextNode) {
-      setCurrentNode(nextNode);
       return;
     }
 
     /*
-     * No more mission-level nodes.
-     *
-     * For the first prototype we return to the
-     * mission overview.
-     *
-     * Later this will handle the complete mission
-     * state / final decision.
+     * Mission node → Quest.
      */
-
     router.push(
-      `/program/mission/${mission.key}`,
+      `/program/mission/${destination.missionId}/quest/${destination.questId}?node=${destination.nodeKey}`,
     );
   }
 
   function handleBack() {
-    const previousNode = getPreviousNode(
-      mission,
-      'mission',
-      mission.key,
-      currentNode.key,
-    );
+    const previous =
+      getPreviousNode(
+        mission,
+        currentNode.key,
+      );
 
-    if (previousNode) {
-      setCurrentNode(previousNode);
+    if (!previous) {
+      return;
     }
+
+    if (
+      previous.container.type !==
+      'mission'
+    ) {
+      return;
+    }
+
+    setCurrentNode(
+      previous,
+    );
   }
-
-  /*
-   * Find the first quest that follows the current
-   * mission node.
-   *
-   * This is useful for showing the transition point
-   * in the mission UI.
-   */
-  const nextQuest = useMemo(() => {
-    if (currentIndex < 0) {
-      return null;
-    }
-
-    /*
-     * For now quests are ordered by their sequence.
-     * We will make the exact mission orchestration
-     * explicit in the playbook once we wire the
-     * complete Mission 1 flow.
-     */
-    return (
-      mission.quests?.find(
-        (quest) => quest.sequence === currentIndex + 1,
-      ) ?? null
-    );
-  }, [
-    mission.quests,
-    currentIndex,
-  ]);
-
-  const progressPercent =
-    missionNodes.length > 0
-      ? ((currentIndex + 1) /
-          missionNodes.length) *
-        100
-      : 0;
 
   return (
     <div className="space-y-8">
-
-      {/* Mission progress */}
-
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
@@ -163,53 +247,31 @@ export function ProgramMissionShell({
           </span>
 
           <span>
-            {Math.round(progressPercent)}%
+            Step {currentIndex + 1}
           </span>
         </div>
 
         <div className="h-1.5 overflow-hidden rounded-full bg-muted">
           <div
-            className="h-full rounded-full bg-primary transition-all duration-300"
+            className="h-full rounded-full bg-primary transition-all"
             style={{
-              width: `${progressPercent}%`,
+              width: `${((currentIndex + 1) /
+                  nodes.length) *
+                100
+                }%`,
             }}
           />
         </div>
       </div>
 
-      {/* Current mission node */}
-
       <ProgramNodeRenderer
         node={currentNode}
         context={{}}
-        progress={{
-          status: completedNodeKeys.includes(
-            currentNode.key,
-          )
-            ? 'completed'
-            : 'in_progress',
-
-          payload:
-            payloadByNode[currentNode.key] ?? {},
-        }}
-        onComplete={handleComplete}
+        progress={nodeProgress}
+        onComplete={
+          handleComplete
+        }
       />
-
-      {/* Optional quest transition */}
-
-      {nextQuest && (
-        <div className="rounded-xl border p-5">
-          <p className="text-sm text-muted-foreground">
-            Coming next
-          </p>
-
-          <p className="mt-1 font-medium">
-            Quest {nextQuest.sequence}: {nextQuest.title}
-          </p>
-        </div>
-      )}
-
-      {/* Back */}
 
       {currentIndex > 0 && (
         <button
@@ -221,8 +283,6 @@ export function ProgramMissionShell({
         </button>
       )}
 
-      {/* Development state */}
-
       <details className="rounded-lg border p-4">
         <summary className="cursor-pointer text-sm font-medium">
           Development state
@@ -231,9 +291,10 @@ export function ProgramMissionShell({
         <pre className="mt-4 overflow-auto text-xs">
           {JSON.stringify(
             {
-              currentNode: currentNode.key,
-              completedNodeKeys,
-              payloadByNode,
+              currentNode:
+                currentNode.key,
+              completed:
+                progress.completedNodeKeys,
             },
             null,
             2,
