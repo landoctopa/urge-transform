@@ -113,27 +113,20 @@ const mission1: ProgramMission = {
     {
       key: 'm1-q1-motivation',
       role: 'investigation',
-
       container: {
         type: 'quest',
         key: 'm1-q1',
       },
-
       sequence: 3,
-
       component: 'motivation_explorer',
-
       title: 'But you are still here.',
-
       behavioralIntent:
         'Help the user discover the force that keeps bringing them back to this dream despite their resistance.',
-
       context: [
         'user.profile',
         'm1-situation',
         'm1-q1-complication',
       ],
-
       dependencies: [
         'm1-q1-complication',
       ],
@@ -141,7 +134,6 @@ const mission1: ProgramMission = {
       outputs: [
         'user_profile.motivations',
       ],
-
       resources: [],
       stories: [],
     },
@@ -149,35 +141,22 @@ const mission1: ProgramMission = {
     {
       key: 'm1-q1-future',
       role: 'investigation',
-
       container: {
         type: 'quest',
         key: 'm1-q1',
       },
-
       sequence: 4,
-
       component: 'future_state_explorer',
-
       title: 'What would be different?',
-
       behavioralIntent:
         'Make the desired change concrete enough that it becomes personally meaningful.',
-
       context: [
         'user.profile',
         'm1-q1-complication',
         'm1-q1-motivation',
       ],
-
-      dependencies: [
-        'm1-q1-motivation',
-      ],
-
-      outputs: [
-        'user_profile.desired_future',
-      ],
-
+      dependencies: ['m1-q1-motivation'],
+      outputs: ['user_profile.desired_future'],
       resources: [],
       stories: [],
     },

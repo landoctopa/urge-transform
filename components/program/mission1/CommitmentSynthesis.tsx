@@ -4,36 +4,20 @@ import { useState } from 'react';
 
 import {
   ArrowRight,
-  Check,
   Loader2,
   Sparkles,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 
 import type { ProgramComponentProps } from '@/lib/program/componentRegistry';
-
-interface Mission1Synthesis {
-  situation: string;
-  motivation: string;
-  tension: string;
-  pattern: string;
-  commitmentQuestion: string;
-}
 
 export function CommitmentSynthesis({
   progress,
   onComplete,
 }: ProgramComponentProps) {
   const saved = progress.payload ?? {};
-
-  const [synthesis, setSynthesis] =
-    useState<Mission1Synthesis | null>(
-      saved.synthesis &&
-        typeof saved.synthesis === 'object'
-        ? (saved.synthesis as Mission1Synthesis)
-        : null,
-    );
 
   const [commitment, setCommitment] =
     useState(
@@ -42,18 +26,22 @@ export function CommitmentSynthesis({
         : '',
     );
 
-  const [response, setResponse] =
-    useState<
-      'yes' | 'not-quite' | null
-    >(
-      saved.synthesisResponse === 'yes' ||
-        saved.synthesisResponse ===
-          'not-quite'
-        ? saved.synthesisResponse
+  const [synthesis, setSynthesis] =
+    useState<string | null>(
+      typeof saved.aiSynthesis === 'string'
+        ? saved.aiSynthesis
         : null,
     );
 
-  const [isLoading, setIsLoading] =
+  const [refinedCommitment, setRefinedCommitment] =
+    useState(
+      typeof saved.refinedCommitment ===
+        'string'
+        ? saved.refinedCommitment
+        : '',
+    );
+
+  const [isSynthesizing, setIsSynthesizing] =
     useState(false);
 
   const [isSubmitting, setIsSubmitting] =
@@ -62,104 +50,189 @@ export function CommitmentSynthesis({
   const [error, setError] =
     useState<string | null>(null);
 
-  async function generateSynthesis() {
-    if (isLoading || synthesis) {
+  const canContinue =
+    commitment.trim().length >= 3;
+
+  /*
+   * -------------------------------------------------------
+   * Direct path
+   * -------------------------------------------------------
+   */
+  async function handleContinue() {
+    if (!canContinue || isSubmitting) {
       return;
     }
 
-    setIsLoading(true);
+    setIsSubmitting(true);
     setError(null);
 
     try {
-      /*
-       * The shell currently exposes node progress
-       * for the current node. For the prototype we
-       * can retrieve the broader mission progress
-       * from localStorage.
-       *
-       * This can later be replaced by the central
-       * context manager we designed.
-       */
-      let storedProgress = null;
+      await onComplete({
+        commitment:
+          commitment.trim(),
 
-      try {
-        const raw =
-          window.localStorage.getItem(
-            'program-progress-mission-1',
-          );
+        synthesisMode:
+          synthesis
+            ? 'ai'
+            : 'direct',
 
-        if (raw) {
-          storedProgress =
-            JSON.parse(raw);
-        }
-      } catch {
-        // Continue with current-node context.
-      }
+        aiSynthesis:
+          synthesis,
 
+        refinedCommitment:
+          refinedCommitment.trim() ||
+          undefined,
+
+        completed: true,
+      });
+    } catch (error) {
+      console.error(
+        '[COMMITMENT] Continue error',
+        error,
+      );
+
+      setError(
+        'Something went wrong while saving your commitment. Please try again.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  /*
+   * -------------------------------------------------------
+   * Optional AI synthesis
+   * -------------------------------------------------------
+   */
+  async function handleSynthesize() {
+    if (
+      !canContinue ||
+      isSynthesizing
+    ) {
+      return;
+    }
+
+    setIsSynthesizing(true);
+    setError(null);
+
+    try {
       const response = await fetch(
-        '/api/program/mission1/synthesis',
+        '/api/program/mission1/commitment',
         {
           method: 'POST',
+
           headers: {
             'Content-Type':
               'application/json',
           },
+
           body: JSON.stringify({
-            progress:
-              storedProgress ??
-              progress,
+            commitment:
+              commitment.trim(),
           }),
         },
       );
 
-      if (!response.ok) {
+      let data: {
+        synthesis?: string;
+        suggestedCommitment?: string;
+        error?: string;
+      };
+
+      try {
+        data = await response.json();
+      } catch {
         throw new Error(
-          'Unable to generate synthesis',
+          'The synthesis service returned an invalid response.',
         );
       }
 
-      const data =
-        (await response.json()) as Mission1Synthesis;
+      if (!response.ok) {
+        throw new Error(
+          data.error ??
+            'Unable to synthesize commitment.',
+        );
+      }
 
-      setSynthesis(data);
-    } catch (err) {
+      if (
+        !data.synthesis ||
+        typeof data.synthesis !==
+          'string'
+      ) {
+        throw new Error(
+          'No synthesis was returned.',
+        );
+      }
+
+      setSynthesis(
+        data.synthesis,
+      );
+
+      if (
+        data.suggestedCommitment &&
+        typeof data.suggestedCommitment ===
+          'string'
+      ) {
+        setRefinedCommitment(
+          data.suggestedCommitment,
+        );
+      }
+    } catch (error) {
       console.error(
-        '[MISSION1 SYNTHESIS]',
-        err,
+        '[COMMITMENT] Synthesis error',
+        error,
       );
 
       setError(
-        'We could not generate your synthesis right now. Please try again.',
+        'We could not sharpen your commitment right now. You can still continue with your original commitment.',
       );
     } finally {
-      setIsLoading(false);
+      setIsSynthesizing(false);
     }
   }
 
-  async function handleComplete() {
+  /*
+   * -------------------------------------------------------
+   * Continue after synthesis
+   * -------------------------------------------------------
+   */
+  async function handleUseSynthesis() {
     if (
-      !synthesis ||
-      !response ||
-      commitment.trim().length < 3 ||
+      !canContinue ||
       isSubmitting
     ) {
       return;
     }
 
     setIsSubmitting(true);
+    setError(null);
 
     try {
       await onComplete({
-        synthesis,
-
-        synthesisResponse:
-          response,
-
         commitment:
           commitment.trim(),
 
+        synthesisMode:
+          'ai',
+
+        aiSynthesis:
+          synthesis,
+
+        refinedCommitment:
+          refinedCommitment.trim() ||
+          undefined,
+
         completed: true,
       });
+    } catch (error) {
+      console.error(
+        '[COMMITMENT] Save error',
+        error,
+      );
+
+      setError(
+        'Something went wrong while saving your commitment. Please try again.',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -167,234 +240,262 @@ export function CommitmentSynthesis({
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-8">
-      {/* Header */}
 
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
-          <Sparkles className="h-4 w-4" />
-          Putting it together
+      {/* ------------------------------------------------ */}
+      {/* INTRO                                            */}
+      {/* ------------------------------------------------ */}
+
+      <div className="space-y-4">
+
+        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+          Make it real
         </div>
 
-        <h2 className="text-2xl font-semibold tracking-tight">
-          Let's see what we've uncovered.
+        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          What are you committing to?
         </h2>
 
-        <p className="max-w-xl text-sm leading-6 text-muted-foreground">
-          You've looked at what has been holding you
-          back, what keeps bringing you back, and what
-          you want the future to look like.
-        </p>
+        <div className="space-y-3 text-sm leading-6 text-muted-foreground sm:text-base">
 
-        <p className="max-w-xl text-sm leading-6 text-muted-foreground">
-          Before we move on, let's put those pieces
-          together.
-        </p>
+          <p>
+            You've looked at where you are,
+            what's holding you back, and what
+            you want to change.
+          </p>
+
+          <p>
+            Now turn that into a commitment you
+            can actually act on.
+          </p>
+
+          <p>
+            It doesn't need to be perfect.
+            It needs to be real.
+          </p>
+
+        </div>
       </div>
 
-      {/* Generate */}
+      {/* ------------------------------------------------ */}
+      {/* COMMITMENT                                       */}
+      {/* ------------------------------------------------ */}
 
-      {!synthesis && (
-        <div className="space-y-4">
-          <div className="rounded-2xl border bg-muted/30 p-6">
-            <p className="text-sm leading-6 text-muted-foreground">
-              I'll reflect back the pattern emerging
-              from what you've shared. You can decide
-              whether it actually fits.
-            </p>
-          </div>
+      <div className="rounded-2xl border bg-card p-6 shadow-sm">
+
+        <Textarea
+          value={commitment}
+          onChange={(event) =>
+            setCommitment(
+              event.target.value,
+            )
+          }
+          placeholder="I commit to..."
+          className="min-h-[170px] resize-none border-0 bg-transparent p-0 text-base leading-7 shadow-none focus-visible:ring-0"
+          disabled={
+            isSubmitting ||
+            Boolean(synthesis)
+          }
+        />
+
+      </div>
+
+      {/* ------------------------------------------------ */}
+      {/* INITIAL ACTIONS                                  */}
+      {/* ------------------------------------------------ */}
+
+      <div className="space-y-4">
+
+        <div className="flex flex-col gap-3 sm:flex-row">
+
+          {/* Direct */}
 
           <Button
-            onClick={generateSynthesis}
-            disabled={isLoading}
+            onClick={handleContinue}
+            disabled={
+              !canContinue ||
+              isSubmitting ||
+              isSynthesizing
+            }
             className="gap-2 rounded-full px-6"
           >
-            {isLoading ? (
+            {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Connecting the dots...
+                Saving...
               </>
             ) : (
               <>
-                <Sparkles className="h-4 w-4" />
-                Show me what you've uncovered
+                Continue
+                <ArrowRight className="h-4 w-4" />
               </>
             )}
           </Button>
 
-          {error && (
-            <p className="text-sm text-muted-foreground">
-              {error}
-            </p>
-          )}
+          {/* Optional synthesis */}
+
+          <Button
+            variant="outline"
+            onClick={handleSynthesize}
+            disabled={
+              !canContinue ||
+              isSynthesizing ||
+              isSubmitting
+            }
+            className="gap-2 rounded-full px-6"
+          >
+            {isSynthesizing ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Sharpening...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" />
+                Help me sharpen this
+              </>
+            )}
+          </Button>
+
         </div>
-      )}
 
-      {/* Synthesis */}
+        <p className="text-xs leading-5 text-muted-foreground">
+          Happy with your commitment? Continue.
+          Want another perspective before you
+          lock it in? We can sharpen it together.
+        </p>
 
-      {synthesis && (
-        <div className="animate-in fade-in slide-in-from-bottom-2 space-y-6 duration-700">
-          <div className="space-y-4">
-            <SynthesisCard
-              label="Where you are"
-              text={synthesis.situation}
-            />
-
-            <SynthesisCard
-              label="What keeps pulling you back"
-              text={synthesis.motivation}
-            />
-
-            <SynthesisCard
-              label="The tension"
-              text={synthesis.tension}
-            />
-
-            <div className="rounded-2xl border-2 bg-primary/5 p-6">
-              <div className="mb-3 text-xs font-semibold uppercase tracking-widest text-primary">
-                The pattern
-              </div>
-
-              <p className="text-lg font-medium leading-8">
-                {synthesis.pattern}
-              </p>
-            </div>
-          </div>
-
-          {/* Validation */}
-
-          <div className="space-y-3">
-            <p className="text-sm font-medium">
-              Does this feel like an accurate picture?
-            </p>
-
-            <div className="grid gap-2 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={() =>
-                  setResponse('yes')
-                }
-                className={`rounded-xl border p-4 text-left transition ${
-                  response === 'yes'
-                    ? 'border-primary bg-primary/5'
-                    : 'hover:bg-muted/50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full border">
-                    {response === 'yes' && (
-                      <Check className="h-4 w-4" />
-                    )}
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-medium">
-                      Yes — that feels right
-                    </p>
-
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      You've captured something important.
-                    </p>
-                  </div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setResponse('not-quite')
-                }
-                className={`rounded-xl border p-4 text-left transition ${
-                  response === 'not-quite'
-                    ? 'border-primary bg-primary/5'
-                    : 'hover:bg-muted/50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full border">
-                    {response ===
-                      'not-quite' && (
-                      <Check className="h-4 w-4" />
-                    )}
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-medium">
-                      Not quite
-                    </p>
-
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Something important is missing.
-                    </p>
-                  </div>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* Commitment */}
-
-          {response && (
-            <div className="space-y-4">
-              <div className="rounded-2xl border p-6">
-                <p className="mb-3 text-base font-medium leading-7">
-                  {synthesis.commitmentQuestion}
-                </p>
-
-                <textarea
-                  value={commitment}
-                  onChange={(event) =>
-                    setCommitment(
-                      event.target.value,
-                    )
-                  }
-                  placeholder="My commitment is..."
-                  className="min-h-[130px] w-full resize-none rounded-xl border bg-background p-4 text-sm leading-6 outline-none transition focus:ring-2 focus:ring-ring"
-                />
-              </div>
-
-              <div className="flex justify-end">
-                <Button
-                  onClick={handleComplete}
-                  disabled={
-                    isSubmitting ||
-                    commitment.trim()
-                      .length < 3
-                  }
-                  className="gap-2 rounded-full px-6"
-                >
-                  {isSubmitting
-                    ? 'Saving...'
-                    : 'Make the commitment'}
-
-                  {!isSubmitting && (
-                    <ArrowRight className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function SynthesisCard({
-  label,
-  text,
-}: {
-  label: string;
-  text: string;
-}) {
-  return (
-    <div className="rounded-2xl border p-6">
-      <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        {label}
       </div>
 
-      <p className="text-base leading-7">
-        {text}
-      </p>
+      {/* ------------------------------------------------ */}
+      {/* ERROR                                            */}
+      {/* ------------------------------------------------ */}
+
+      {error && (
+        <div className="rounded-xl border border-dashed p-4">
+
+          <p className="text-sm leading-6 text-muted-foreground">
+            {error}
+          </p>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleContinue}
+            disabled={
+              !canContinue ||
+              isSubmitting
+            }
+            className="mt-2 px-0"
+          >
+            Continue with my commitment
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+
+        </div>
+      )}
+
+      {/* ------------------------------------------------ */}
+      {/* AI SYNTHESIS                                     */}
+      {/* ------------------------------------------------ */}
+
+      {synthesis && (
+        <div className="animate-in fade-in slide-in-from-bottom-2 space-y-7 duration-500">
+
+          <div className="rounded-2xl border bg-primary/5 p-6">
+
+            <div className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-primary">
+
+              <Sparkles className="h-4 w-4" />
+
+              A sharper version
+
+            </div>
+
+            <p className="text-base leading-7">
+              {synthesis}
+            </p>
+
+          </div>
+
+          {/* Suggested commitment */}
+
+          {refinedCommitment && (
+            <div className="space-y-3">
+
+              <label
+                htmlFor="refined-commitment"
+                className="text-sm font-medium"
+              >
+                Here's one way you could
+                sharpen your commitment
+              </label>
+
+              <Textarea
+                id="refined-commitment"
+                value={
+                  refinedCommitment
+                }
+                onChange={(event) =>
+                  setRefinedCommitment(
+                    event.target.value,
+                  )
+                }
+                className="min-h-[140px] resize-none text-base leading-7"
+                disabled={
+                  isSubmitting
+                }
+              />
+
+              <p className="text-xs leading-5 text-muted-foreground">
+                Edit this freely. It is your
+                commitment, not the AI's.
+              </p>
+
+            </div>
+          )}
+
+          {/* Actions */}
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+
+            <Button
+              onClick={
+                handleUseSynthesis
+              }
+              disabled={
+                isSubmitting
+              }
+              className="gap-2 rounded-full px-6"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  Use this commitment
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+
+            <Button
+              variant="ghost"
+              onClick={handleContinue}
+              disabled={
+                isSubmitting
+              }
+              className="rounded-full"
+            >
+              Keep my original commitment
+            </Button>
+
+          </div>
+
+        </div>
+      )}
+
     </div>
   );
 }

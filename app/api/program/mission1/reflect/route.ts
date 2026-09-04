@@ -1,33 +1,24 @@
 import { NextResponse } from 'next/server';
 
-import {
-  reflectOnComplication,
-} from '@/lib/ai/mission1';
+import { reflectOnComplication } from '@/lib/ai/mission1';
 
 export async function POST(
   request: Request,
 ) {
   try {
-    const body = await request.json();
+    const body =
+      await request.json();
 
     const answer =
       typeof body.answer === 'string'
         ? body.answer.trim()
         : '';
 
-    const fears =
-      Array.isArray(body.fears)
-        ? body.fears.filter(
-            (value: unknown): value is string =>
-              typeof value === 'string',
-          )
-        : [];
-
-    if (!answer && fears.length === 0) {
+    if (answer.length < 3) {
       return NextResponse.json(
         {
           error:
-            'An answer or fear selection is required.',
+            'Please provide an answer first.',
         },
         { status: 400 },
       );
@@ -36,10 +27,11 @@ export async function POST(
     const result =
       await reflectOnComplication(
         answer,
-        fears,
       );
 
-    return NextResponse.json(result);
+    return NextResponse.json(
+      result,
+    );
   } catch (error) {
     console.error(
       '[MISSION1 AI]',
@@ -49,7 +41,9 @@ export async function POST(
     return NextResponse.json(
       {
         error:
-          'Unable to generate reflection.',
+          error instanceof Error
+            ? error.message
+            : 'Unable to generate reflection.',
       },
       { status: 500 },
     );

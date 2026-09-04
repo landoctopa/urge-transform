@@ -1,52 +1,90 @@
+import type OpenAI from 'openai';
+
 import { deepseek } from './deepseekClient';
 
 export interface Mission1Reflection {
-  response: string;
-  insight?: string;
-  followUpQuestion?: string;
+  reflection: string;
 }
 
-let complicationPrompt = `
-You are the reflective guide inside a founder development
-program called Mission 1.
+function extractJson(
+  content: string,
+): Mission1Reflection {
+  const trimmed = content.trim();
 
-Your job is NOT to give business advice.
+  if (!trimmed) {
+    throw new Error(
+      'DeepSeek returned empty content',
+    );
+  }
 
-The user is exploring why they have not started something
-they have wanted to start.
+  /*
+   * First try the response exactly as returned.
+   */
+  try {
+    return JSON.parse(
+      trimmed,
+    ) as Mission1Reflection;
+  } catch {
+    // Continue below.
+  }
 
-Respond with empathy, curiosity and psychological precision.
+  /*
+   * DeepSeek can occasionally wrap JSON in
+   * markdown fences despite the requested format.
+   */
+  const withoutFence =
+    trimmed
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim();
 
-Look for the tension underneath their answer:
-- fear of failure
-- fear of discovering the idea is wrong
-- fear of judgement
-- fear of losing stability
-- perfectionism
-- uncertainty
-- identity
-- commitment
-- other hidden resistance
+  try {
+    return JSON.parse(
+      withoutFence,
+    ) as Mission1Reflection;
+  } catch {
+    // Continue below.
+  }
 
-Do not diagnose the user.
-Do not tell them what they "really" feel.
-Use language such as "it sounds like", "I wonder if",
-or "perhaps".
+  /*
+   * Last attempt: locate the JSON object.
+   */
+  const start =
+    withoutFence.indexOf('{');
 
-Return JSON with:
-{
-  "response": "2-4 short paragraphs",
-  "insight": "one concise observation",
-  "followUpQuestion": "one thoughtful question"
+  const end =
+    withoutFence.lastIndexOf('}');
+
+  if (
+    start !== -1 &&
+    end > start
+  ) {
+    const candidate =
+      withoutFence.slice(
+        start,
+        end + 1,
+      );
+
+    try {
+      return JSON.parse(
+        candidate,
+      ) as Mission1Reflection;
+    } catch {
+      // Fall through.
+    }
+  }
+
+  throw new Error(
+    `DeepSeek returned invalid JSON: ${trimmed.slice(
+      0,
+      500,
+    )}`,
+  );
 }
-
-The response should feel like a perceptive human coach,
-not an AI assistant.
-        `.trim();
 
 export async function reflectOnComplication(
   answer: string,
-  fears: string[],
 ): Promise<Mission1Reflection> {
   const completion =
     await deepseek.chat.completions.create({
@@ -55,22 +93,72 @@ export async function reflectOnComplication(
       messages: [
         {
           role: 'system',
-          content: complicationPrompt,
+          content: `
+You are a thoughtful guide in a founder
+development program.
+
+The user has answered:
+
+"Why haven't you started?"
+
+Your job is NOT to solve their problem.
+
+Your job is to help them notice what might
+be underneath their answer.
+
+Reflect their answer with empathy and
+curiosity.
+
+Look for possible:
+- fear
+- uncertainty
+- perfectionism
+- lack of confidence
+- competing priorities
+- ambiguity
+- fear of failure
+- fear of judgement
+- fear of committing to the wrong thing
+
+Do not assume that any of these are present.
+
+Do not diagnose the user.
+
+Do not give business advice.
+
+Do not tell them what they should do.
+
+Instead, offer a short reflection that helps
+them look at their own answer differently.
+
+The response should sound like a thoughtful
+human coach, not an AI assistant.
+
+Return ONLY valid JSON in this exact shape:
+
+{
+  "reflection": "A short reflection of 2-4 paragraphs."
+}
+          `.trim(),
         },
 
         {
           role: 'user',
-          content: JSON.stringify({
-            answer,
-            fears,
-          }),
+          content: answer,
         },
       ],
 
       response_format: {
         type: 'json_object',
       },
-      max_tokens: 500,
+
+      /*
+       * Keep this deliberately modest.
+       *
+       * We are asking for a short reflection,
+       * not a long reasoning process.
+       */
+      max_tokens: 350,
     });
 
   const content =
@@ -78,9 +166,9 @@ export async function reflectOnComplication(
 
   if (!content) {
     throw new Error(
-      'DeepSeek returned an empty response',
+      'DeepSeek returned no message content',
     );
   }
 
-  return JSON.parse(content) as Mission1Reflection;
+  return extractJson(content);
 }

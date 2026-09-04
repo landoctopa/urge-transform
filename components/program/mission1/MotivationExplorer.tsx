@@ -5,7 +5,6 @@ import { useState } from 'react';
 import {
   ArrowRight,
   Loader2,
-  MessageCircle,
   Sparkles,
 } from 'lucide-react';
 
@@ -13,12 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
 import type { ProgramComponentProps } from '@/lib/program/componentRegistry';
-
-interface MotivationReflection {
-  response: string;
-  insight?: string;
-  followUpQuestion?: string;
-}
 
 export function MotivationExplorer({
   progress,
@@ -33,10 +26,9 @@ export function MotivationExplorer({
   );
 
   const [reflection, setReflection] =
-    useState<MotivationReflection | null>(
-      saved.aiReflection &&
-        typeof saved.aiReflection === 'object'
-        ? (saved.aiReflection as MotivationReflection)
+    useState<string | null>(
+      typeof saved.aiReflection === 'string'
+        ? saved.aiReflection
         : null,
     );
 
@@ -56,11 +48,62 @@ export function MotivationExplorer({
   const [error, setError] =
     useState<string | null>(null);
 
-  const canReflect =
-    answer.trim().length >= 10;
+  const canContinue =
+    answer.trim().length >= 3;
 
+  /*
+   * -------------------------------------------------------
+   * Direct path
+   * -------------------------------------------------------
+   *
+   * The user doesn't need AI to proceed.
+   */
+  async function handleContinue() {
+    if (!canContinue || isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      await onComplete({
+        answer: answer.trim(),
+
+        explorationMode:
+          reflection
+            ? 'reflection'
+            : 'direct',
+
+        aiReflection:
+          reflection,
+
+        followUp:
+          followUp.trim() || undefined,
+
+        completed: true,
+      });
+    } catch (error) {
+      console.error(
+        '[MOTIVATION] Continue error',
+        error,
+      );
+
+      setError(
+        'Something went wrong while saving your response. Please try again.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  /*
+   * -------------------------------------------------------
+   * Optional AI enrichment
+   * -------------------------------------------------------
+   */
   async function handleReflect() {
-    if (!canReflect || isReflecting) {
+    if (!canContinue || isReflecting) {
       return;
     }
 
@@ -72,59 +115,102 @@ export function MotivationExplorer({
         '/api/program/mission1/motivation',
         {
           method: 'POST',
+
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type':
+              'application/json',
           },
+
           body: JSON.stringify({
             answer: answer.trim(),
           }),
         },
       );
 
-      if (!response.ok) {
+      let data: {
+        reflection?: string;
+        error?: string;
+      };
+
+      try {
+        data = await response.json();
+      } catch {
         throw new Error(
-          'Unable to generate reflection',
+          'The reflection service returned an invalid response.',
         );
       }
 
-      const data =
-        (await response.json()) as MotivationReflection;
+      if (!response.ok) {
+        throw new Error(
+          data.error ??
+            'Unable to generate reflection.',
+        );
+      }
 
-      setReflection(data);
-    } catch (err) {
+      if (
+        !data.reflection ||
+        typeof data.reflection !==
+          'string'
+      ) {
+        throw new Error(
+          'No reflection was returned.',
+        );
+      }
+
+      setReflection(
+        data.reflection,
+      );
+    } catch (error) {
       console.error(
-        '[MISSION1 MOTIVATION]',
-        err,
+        '[MOTIVATION] Reflection error',
+        error,
       );
 
       setError(
-        'We could not generate the reflection right now. Please try again.',
+        'We could not generate a reflection right now. You can still continue without it.',
       );
     } finally {
       setIsReflecting(false);
     }
   }
 
-  async function handleComplete() {
-    if (isSubmitting) {
+  /*
+   * -------------------------------------------------------
+   * Continue after optional reflection
+   * -------------------------------------------------------
+   */
+  async function handleContinueWithReflection() {
+    if (!canContinue || isSubmitting) {
       return;
     }
 
     setIsSubmitting(true);
+    setError(null);
 
     try {
       await onComplete({
         answer: answer.trim(),
 
-        aiReflection: reflection,
+        explorationMode:
+          'reflection',
 
-        followUp: followUp.trim(),
+        aiReflection:
+          reflection,
 
-        aiInteractionCompleted:
-          Boolean(reflection),
+        followUp:
+          followUp.trim() || undefined,
 
         completed: true,
       });
+    } catch (error) {
+      console.error(
+        '[MOTIVATION] Save error',
+        error,
+      );
+
+      setError(
+        'Something went wrong while saving your response. Please try again.',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -132,168 +218,226 @@ export function MotivationExplorer({
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-8">
-      {/* Header */}
 
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
-          <Sparkles className="h-4 w-4" />
-          What is pulling you forward?
+      {/* ------------------------------------------------ */}
+      {/* INTRO                                            */}
+      {/* ------------------------------------------------ */}
+
+      <div className="space-y-4">
+
+        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+          There's a reason you're here
         </div>
 
-        <h2 className="text-2xl font-semibold tracking-tight">
-          What has made you give this another shot?
+        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          What made you give this another shot?
         </h2>
 
-        <p className="max-w-xl text-sm leading-6 text-muted-foreground">
-          You have probably had reasons to walk away.
-          Something has kept bringing you back.
-        </p>
+        <div className="space-y-3 text-sm leading-6 text-muted-foreground sm:text-base">
 
-        <p className="max-w-xl text-sm leading-6 text-muted-foreground">
-          Don't worry about making it sound impressive.
-          Tell us what is genuinely pulling you toward
-          this.
-        </p>
+          <p>
+            You've thought about this before.
+            Maybe you've even tried to start.
+          </p>
+
+          <p>
+            But something brought you back.
+          </p>
+
+          <p>
+            What is it?
+          </p>
+
+        </div>
       </div>
 
-      {/* Initial answer */}
+      {/* ------------------------------------------------ */}
+      {/* ANSWER                                           */}
+      {/* ------------------------------------------------ */}
 
-      <div className="rounded-2xl border bg-card p-6">
+      <div className="rounded-2xl border bg-card p-6 shadow-sm">
+
         <Textarea
           value={answer}
           onChange={(event) =>
             setAnswer(event.target.value)
           }
-          disabled={Boolean(reflection)}
-          placeholder="I keep coming back to this because..."
-          className="min-h-[160px] resize-none text-base leading-7"
+          placeholder="I'm giving this another shot because..."
+          className="min-h-[170px] resize-none border-0 bg-transparent p-0 text-base leading-7 shadow-none focus-visible:ring-0"
+          disabled={isSubmitting}
         />
+
       </div>
 
-      {/* First AI interaction */}
+      {/* ------------------------------------------------ */}
+      {/* INITIAL ACTIONS                                  */}
+      {/* ------------------------------------------------ */}
 
-      {!reflection && (
-        <div className="space-y-3">
+      <div className="space-y-4">
+
+        <div className="flex flex-col gap-3 sm:flex-row">
+
           <Button
+            onClick={handleContinue}
+            disabled={
+              !canContinue ||
+              isSubmitting ||
+              isReflecting
+            }
+            className="gap-2 rounded-full px-6"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                Continue
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </Button>
+
+          <Button
+            variant="outline"
             onClick={handleReflect}
             disabled={
-              !canReflect ||
-              isReflecting
+              !canContinue ||
+              isReflecting ||
+              isSubmitting
             }
             className="gap-2 rounded-full px-6"
           >
             {isReflecting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Thinking about that...
+                Exploring...
               </>
             ) : (
               <>
                 <Sparkles className="h-4 w-4" />
-                Let's look underneath that
+                Help me explore this
               </>
             )}
           </Button>
 
-          {error && (
-            <p className="text-sm text-muted-foreground">
-              {error}
-            </p>
-          )}
+        </div>
+
+        <p className="text-xs leading-5 text-muted-foreground">
+          Already know what brought you back?
+          Continue. Want to understand it a little
+          better? Explore it with us.
+        </p>
+
+      </div>
+
+      {/* ------------------------------------------------ */}
+      {/* ERROR                                            */}
+      {/* ------------------------------------------------ */}
+
+      {error && (
+        <div className="rounded-xl border border-dashed p-4">
+
+          <p className="text-sm leading-6 text-muted-foreground">
+            {error}
+          </p>
+
         </div>
       )}
 
-      {/* AI reflection */}
+      {/* ------------------------------------------------ */}
+      {/* OPTIONAL AI REFLECTION                           */}
+      {/* ------------------------------------------------ */}
 
       {reflection && (
-        <div className="animate-in fade-in slide-in-from-bottom-2 space-y-6 duration-500">
+        <div className="animate-in fade-in slide-in-from-bottom-2 space-y-7 duration-500">
+
           <div className="rounded-2xl border bg-primary/5 p-6">
-            <div className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
-              <MessageCircle className="h-4 w-4" />
-              Let's go one level deeper
+
+            <div className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-primary">
+
+              <Sparkles className="h-4 w-4" />
+
+              Something worth noticing
+
             </div>
 
-            <div className="space-y-4">
-              <p className="text-base leading-7">
-                {reflection.response}
-              </p>
-
-              {reflection.insight && (
-                <div className="border-l-2 border-primary pl-4">
-                  <p className="text-sm font-medium leading-6">
-                    {reflection.insight}
-                  </p>
-                </div>
-              )}
-
-              {reflection.followUpQuestion && (
-                <p className="text-base font-medium leading-7">
-                  {reflection.followUpQuestion}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Follow-up */}
-
-          {reflection.followUpQuestion && (
-            <div className="space-y-3">
-              <label
-                htmlFor="motivation-follow-up"
-                className="text-sm font-medium"
-              >
-                Your answer
-              </label>
-
-              <Textarea
-                id="motivation-follow-up"
-                value={followUp}
-                onChange={(event) =>
-                  setFollowUp(
-                    event.target.value,
-                  )
-                }
-                placeholder="What comes up for you when you think about that?"
-                className="min-h-[130px] resize-none"
-              />
-            </div>
-          )}
-
-          <div className="rounded-xl border border-dashed p-4">
-            <p className="text-sm font-medium">
-              There is no "right" motivation.
+            <p className="text-base leading-7">
+              {reflection}
             </p>
 
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              We are trying to understand what actually
-              matters to you — not manufacture a better
-              answer.
-            </p>
           </div>
 
-          <div className="flex justify-end">
-            <Button
-              onClick={handleComplete}
-              disabled={
-                isSubmitting ||
-                (Boolean(
-                  reflection.followUpQuestion,
-                ) &&
-                  followUp.trim().length < 3)
+          {/* Follow-up remains optional */}
+
+          <div className="space-y-3">
+
+            <label
+              htmlFor="motivation-follow-up"
+              className="text-sm font-medium"
+            >
+              Does that resonate?
+            </label>
+
+            <Textarea
+              id="motivation-follow-up"
+              value={followUp}
+              onChange={(event) =>
+                setFollowUp(
+                  event.target.value,
+                )
               }
+              placeholder="What comes up for me is..."
+              className="min-h-[130px] resize-none text-base leading-7"
+              disabled={isSubmitting}
+            />
+
+            <p className="text-xs leading-5 text-muted-foreground">
+              You can leave this blank if you
+              don't have anything else to add.
+            </p>
+
+          </div>
+
+          {/* Reflection branch */}
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+
+            <Button
+              onClick={
+                handleContinueWithReflection
+              }
+              disabled={isSubmitting}
               className="gap-2 rounded-full px-6"
             >
-              {isSubmitting
-                ? 'Saving...'
-                : 'Continue'}
-
-              {!isSubmitting && (
-                <ArrowRight className="h-4 w-4" />
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  Continue with this reflection
+                  <ArrowRight className="h-4 w-4" />
+                </>
               )}
             </Button>
+
+            <Button
+              variant="ghost"
+              onClick={handleContinue}
+              disabled={isSubmitting}
+              className="rounded-full"
+            >
+              Continue without going deeper
+            </Button>
+
           </div>
+
         </div>
       )}
+
     </div>
   );
 }
