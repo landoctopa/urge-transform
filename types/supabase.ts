@@ -77,6 +77,7 @@ export type Database = {
         Row: {
           ai_context_keys: Json
           audio_url: string | null
+          behavioral_intent: string | null
           component_key: string
           config_version: number
           container_key: string
@@ -86,6 +87,7 @@ export type Database = {
           description: string | null
           id: string
           interaction_type: string | null
+          metadata: Json
           mission_key: string
           node_key: string
           program_key: string
@@ -101,6 +103,7 @@ export type Database = {
         Insert: {
           ai_context_keys?: Json
           audio_url?: string | null
+          behavioral_intent?: string | null
           component_key: string
           config_version?: number
           container_key: string
@@ -110,6 +113,7 @@ export type Database = {
           description?: string | null
           id?: string
           interaction_type?: string | null
+          metadata?: Json
           mission_key: string
           node_key: string
           program_key: string
@@ -125,6 +129,7 @@ export type Database = {
         Update: {
           ai_context_keys?: Json
           audio_url?: string | null
+          behavioral_intent?: string | null
           component_key?: string
           config_version?: number
           container_key?: string
@@ -134,6 +139,7 @@ export type Database = {
           description?: string | null
           id?: string
           interaction_type?: string | null
+          metadata?: Json
           mission_key?: string
           node_key?: string
           program_key?: string

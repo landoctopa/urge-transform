@@ -3,7 +3,7 @@ config({ path: '.env.local' });
 
 import { createClient } from '@supabase/supabase-js';
 
-import mission1 from '@/lib/program/missions/mission1';
+import { mission1 } from '@/lib/program/missions/mission1';
 import { componentRegistry } from '@/lib/program/componentRegistry';
 import type {
   ProgramMission,
@@ -160,7 +160,7 @@ function validateMission(
         (candidate) =>
           candidate.container.type === 'quest' &&
           candidate.container.key ===
-            node.container.key,
+          node.container.key,
       ) === false
     ) {
       errors.push(
@@ -173,7 +173,7 @@ function validateMission(
      */
     if (
       node.interaction?.type ===
-        'real_world_action' &&
+      'real_world_action' &&
       !node.interaction.requiresReturn
     ) {
       warnings.push(
@@ -195,69 +195,26 @@ function validateMission(
 
     const row: ProgramContentRow = {
       node_key: node.key,
-
       program_key: mission.key,
-
       mission_key: mission.key,
-
-      quest_key:
-        node.container.type === 'quest'
-          ? node.container.key
-          : null,
-
-      container_type:
-        node.container.type,
-
-      container_key:
-        node.container.key,
-
+      quest_key: node.container.type === 'quest' ? node.container.key: null,
+      container_type: node.container.type,
+      container_key: node.container.key,
       role: node.role,
-
-      component_key:
-        node.component,
-
-      interaction_type:
-        node.interaction?.type ??
-        null,
-
+      component_key: node.component,
+      interaction_type: node.interaction?.type ?? null,
       title: node.title,
-
-      description:
-        node.description ??
-        null,
-
-      behavioral_intent:
-        node.behavioralIntent ??
-        null,
-
-      ai_context_keys:
-        node.context ?? [],
-
-      dependencies:
-        node.dependencies ?? [],
-
-      resources:
-        node.resources ?? [],
-
-      stories:
-        node.stories ?? [],
-
-      video_url:
-        node.assets?.video ??
-        null,
-
-      audio_url:
-        node.assets?.audio ??
-        null,
-
-      sort_order:
-        node.sequence,
-
-      config_version:
-        mission.version,
-
-      metadata:
-        node.metadata ?? {},
+      description: node.description ?? null,
+      behavioral_intent: node.behavioralIntent ?? null,
+      ai_context_keys: node.context ?? [],
+      dependencies: node.dependencies ?? [],
+      resources: node.resources ?? [],
+      stories: node.stories ?? [],
+      video_url: node.assets?.video ?? null,
+      audio_url: node.assets?.audio ?? null,
+      sort_order: node.sequence,
+      config_version: mission.version,
+      metadata: node.metadata ?? {},
     };
 
     rows.push(row);
@@ -335,11 +292,8 @@ function validateMission(
     i < orderedNodes.length;
     i++
   ) {
-    const previous =
-      orderedNodes[i - 1];
-
-    const current =
-      orderedNodes[i];
+    const previous = orderedNodes[i - 1];
+    const current = orderedNodes[i];
 
     if (
       current.sequence <=
