@@ -715,3 +715,189 @@ using (true);
 -- ============================================================
 
 ```
+
+```sql
+create table public.user_observations (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  type text null,
+  title text null,
+  content jsonb not null default '{}'::jsonb,
+  source_node_id uuid null,
+  observed_at timestamp with time zone null,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint user_observations_pkey primary key (id),
+  constraint user_observations_source_node_id_fkey foreign KEY (source_node_id) references program_content (id) on delete set null,
+  constraint user_observations_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists user_observations_user_idx on public.user_observations using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists user_observations_source_node_idx on public.user_observations using btree (source_node_id) TABLESPACE pg_default;
+
+create index IF not exists user_observations_observed_at_idx on public.user_observations using btree (user_id, observed_at) TABLESPACE pg_default;
+
+create trigger user_observations_updated_at BEFORE
+update on user_observations for EACH row
+execute FUNCTION set_updated_at ();
+
+create table public.user_opportunities (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  title text null,
+  description text null,
+  status text not null default 'exploring'::text,
+  source text null,
+  source_node_id uuid null,
+  problem text null,
+  customer text null,
+  hypothesis text null,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint user_opportunities_pkey primary key (id),
+  constraint user_opportunities_source_node_id_fkey foreign KEY (source_node_id) references program_content (id) on delete set null,
+  constraint user_opportunities_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists user_opportunities_user_idx on public.user_opportunities using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists user_opportunities_source_node_idx on public.user_opportunities using btree (source_node_id) TABLESPACE pg_default;
+
+create trigger user_opportunities_updated_at BEFORE
+update on user_opportunities for EACH row
+execute FUNCTION set_updated_at ();
+
+
+create table public.user_contacts (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  name text not null,
+  role text null,
+  organization text null,
+  relationship text null,
+  context text null,
+  contact_details jsonb not null default '{}'::jsonb,
+  source_node_id uuid null,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint user_contacts_pkey primary key (id),
+  constraint user_contacts_source_node_id_fkey foreign KEY (source_node_id) references program_content (id) on delete set null,
+  constraint user_contacts_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists user_contacts_user_idx on public.user_contacts using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists user_contacts_source_node_idx on public.user_contacts using btree (source_node_id) TABLESPACE pg_default;
+
+create trigger user_contacts_updated_at BEFORE
+update on user_contacts for EACH row
+execute FUNCTION set_updated_at ();
+
+create table public.user_commitments (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  commitment text not null,
+  reason text null,
+  status text not null default 'active'::text,
+  source_node_id uuid null,
+  starts_at timestamp with time zone null,
+  due_at timestamp with time zone null,
+  completed_at timestamp with time zone null,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint user_commitments_pkey primary key (id),
+  constraint user_commitments_source_node_id_fkey foreign KEY (source_node_id) references program_content (id) on delete set null,
+  constraint user_commitments_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists user_commitments_user_idx on public.user_commitments using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists user_commitments_status_idx on public.user_commitments using btree (user_id, status) TABLESPACE pg_default;
+
+create index IF not exists user_commitments_source_node_idx on public.user_commitments using btree (source_node_id) TABLESPACE pg_default;
+
+create trigger user_commitments_updated_at BEFORE
+update on user_commitments for EACH row
+execute FUNCTION set_updated_at ();
+
+
+create table public.user_projects (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  opportunity_id uuid null,
+  name text not null,
+  description text null,
+  status text not null default 'active'::text,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint user_projects_pkey primary key (id),
+  constraint user_projects_opportunity_id_fkey foreign KEY (opportunity_id) references user_opportunities (id) on delete set null,
+  constraint user_projects_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists user_projects_user_idx on public.user_projects using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists user_projects_opportunity_idx on public.user_projects using btree (opportunity_id) TABLESPACE pg_default;
+
+create trigger user_projects_updated_at BEFORE
+update on user_projects for EACH row
+execute FUNCTION set_updated_at ();
+
+
+create table public.user_tasks (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  title text not null,
+  description text null,
+  status text not null default 'pending'::text,
+  task_type text null,
+  source_node_id uuid null,
+  due_at timestamp with time zone null,
+  completed_at timestamp with time zone null,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint user_tasks_pkey primary key (id),
+  constraint user_tasks_source_node_id_fkey foreign KEY (source_node_id) references program_content (id) on delete set null,
+  constraint user_tasks_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists user_tasks_user_idx on public.user_tasks using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists user_tasks_status_idx on public.user_tasks using btree (user_id, status) TABLESPACE pg_default;
+
+create index IF not exists user_tasks_source_node_idx on public.user_tasks using btree (source_node_id) TABLESPACE pg_default;
+
+create trigger user_tasks_updated_at BEFORE
+update on user_tasks for EACH row
+execute FUNCTION set_updated_at ();
+
+
+create table public.user_content (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  content_type text not null,
+  title text null,
+  body text null,
+  status text not null default 'draft'::text,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint user_content_pkey primary key (id),
+  constraint user_content_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists user_content_user_idx on public.user_content using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists user_content_status_idx on public.user_content using btree (user_id, status) TABLESPACE pg_default;
+
+create trigger user_content_updated_at BEFORE
+update on user_content for EACH row
+execute FUNCTION set_updated_at ();
+
+```
