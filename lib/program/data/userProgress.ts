@@ -9,6 +9,11 @@ import type {
 } from '@/types/supabase';
 
 import {
+  getAuthenticatedSupabase,
+  getProgramContentId,
+} from './_server';
+
+import {
   requireCurrentUser,
 } from '@/lib/auth';
 
@@ -61,54 +66,6 @@ function normalizeStatus(
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* Resolve node key → program_content.id                                      */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Resolve our application-level node key to
- * the UUID used by user_progress.
- *
- * The UUID is deliberately kept inside the
- * repository and never exposed to callers.
- */
-async function getProgramContentId(
-  nodeKey: string,
-): Promise<string> {
-  const cookieStore =
-    await cookies();
-
-  const supabase =
-    createClient(
-      cookieStore,
-    );
-
-  const {
-    data,
-    error,
-  } = await supabase
-    .from('program_content')
-    .select('id')
-    .eq(
-      'node_key',
-      nodeKey,
-    )
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(
-      `Failed to resolve program node "${nodeKey}": ${error.message}`,
-    );
-  }
-
-  if (!data) {
-    throw new Error(
-      `Program node "${nodeKey}" does not exist`,
-    );
-  }
-
-  return data.id;
-}
 
 /* -------------------------------------------------------------------------- */
 /* Get all progress                                                           */
@@ -123,16 +80,7 @@ async function getProgramContentId(
 export async function getUserProgress(
   missionKey?: string,
 ): Promise<UserNodeProgress[]> {
-  const user =
-    await requireCurrentUser();
-
-  const cookieStore =
-    await cookies();
-
-  const supabase =
-    createClient(
-      cookieStore,
-    );
+  const { user, supabase,} = await getAuthenticatedSupabase();
 
   let query = supabase
     .from('user_progress')
