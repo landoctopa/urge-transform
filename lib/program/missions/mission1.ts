@@ -2,7 +2,7 @@
 
 import type { ProgramMission } from '@/lib/program/types';
 
-const mission1: ProgramMission = {
+export const mission1: ProgramMission = {
   key: 'mission-1',
   version: 1,
   title: 'Move Before Ready',
@@ -1194,4 +1194,3 @@ const mission1: ProgramMission = {
   ],
 };
 
-export default mission1;
