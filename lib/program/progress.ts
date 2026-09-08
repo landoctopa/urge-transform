@@ -7,33 +7,21 @@ export type ProgressStatus =
 
 export interface NodeProgress {
   nodeKey: string;
-
   status: ProgressStatus;
-
   startedAt?: string;
-
   completedAt?: string;
-
   payload: Record<string, unknown>;
-
   aiData?: Record<string, unknown>;
 }
 
 export interface ProgramProgress {
   missionKey: string;
-
   status: ProgressStatus;
-
   currentNodeKey?: string;
-
   completedNodeKeys: string[];
-
   nodes: Record<string, NodeProgress>;
-
   payload: Record<string, unknown>;
-
   aiData: Record<string, unknown>;
-
   updatedAt?: string;
 }
 
