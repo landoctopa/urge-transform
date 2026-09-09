@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -8,7 +7,9 @@ import {
   useState,
 } from 'react';
 
-import { useRouter } from 'next/navigation';
+import {
+  useRouter,
+} from 'next/navigation';
 
 import type {
   ProgramMission,
@@ -34,6 +35,14 @@ import {
   saveProgress,
 } from '@/lib/program/progressStore';
 
+import {
+  buildNodeContext,
+} from '@/lib/program/context';
+
+import {
+  registerJourney,
+} from '@/lib/program/journey';
+
 import { ProgramNodeRenderer } from './ProgramNodeRenderer';
 
 interface ProgramQuestShellProps {
@@ -49,65 +58,59 @@ export function ProgramQuestShell({
   initialNode,
   initialProgress,
 }: ProgramQuestShellProps) {
-  const router = useRouter();
+  const router =
+    useRouter();
 
-  /*
-   * All nodes belonging to this quest.
-   */
-  const nodes = useMemo(
-    () =>
-      getContainerNodes(
+  const nodes =
+    useMemo(
+      () =>
+        getContainerNodes(
+          mission,
+          'quest',
+          questId,
+        ),
+      [
         mission,
-        'quest',
         questId,
-      ),
-    [mission, questId],
+      ],
+    );
+
+  const [
+    progress,
+    setProgress,
+  ] = useState<ProgramProgress>(
+    initialProgress,
   );
 
-  /*
-   * Progress is persisted state.
-   *
-   * The URL / server determines which node
-   * we initially render.
-   *
-   * localStorage only restores progress.
-   */
-  const [progress, setProgress] =
-    useState<ProgramProgress>(
-      initialProgress,
-    );
+  const [
+    currentNode,
+    setCurrentNode,
+  ] = useState<ProgramNode>(
+    initialNode,
+  );
 
-  /*
-   * The node currently being displayed.
-   *
-   * For now this is initialized from the
-   * server/page. Navigation between nodes
-   * happens explicitly through router.push()
-   * or local state for Back.
-   */
-  const [currentNode, setCurrentNode] =
-    useState<ProgramNode>(
-      initialNode,
-    );
-
-  /*
-   * Prevent accidental double submission /
-   * repeated onComplete calls while a
-   * transition is in progress.
-   */
   const completingRef =
     useRef(false);
 
   /*
-   * Restore persisted client-side progress.
+   * Register the current node with
+   * the Journey Runtime.
+   */
+  useEffect(() => {
+    registerJourney(
+      mission,
+      currentNode,
+    );
+  }, [
+    mission,
+    currentNode,
+  ]);
+
+  /*
+   * Restore progress only.
    *
-   * IMPORTANT:
-   *
-   * We deliberately do NOT restore
-   * currentNode from localStorage here.
-   *
-   * The page/URL is authoritative about
-   * which node should currently be shown.
+   * The URL/server determines the
+   * current node.
    */
   useEffect(() => {
     const stored =
@@ -120,28 +123,32 @@ export function ProgramQuestShell({
     }
 
     setProgress(stored);
-  }, [mission.key]);
+  }, [
+    mission.key,
+  ]);
 
   /*
-   * A new node means a new completion
-   * interaction can begin.
+   * A new node allows a new completion
+   * interaction.
    */
   useEffect(() => {
     completingRef.current =
       false;
-  }, [currentNode.key]);
+  }, [
+    currentNode.key,
+  ]);
 
   /*
-   * Keep the rendered node aligned with
-   * a new initialNode when the route/page
-   * changes without a full component
-   * remount.
+   * Keep current node aligned with
+   * server navigation.
    */
   useEffect(() => {
     setCurrentNode(
       initialNode,
     );
-  }, [initialNode]);
+  }, [
+    initialNode,
+  ]);
 
   const currentIndex =
     nodes.findIndex(
@@ -156,6 +163,15 @@ export function ProgramQuestShell({
       currentNode,
     );
 
+  /*
+   * Build node-specific context
+   * from already hydrated stores.
+   */
+  const context =
+    buildNodeContext(
+      currentNode,
+    );
+
   function updateProgress(
     next: ProgramProgress,
   ) {
@@ -166,19 +182,14 @@ export function ProgramQuestShell({
   async function handleComplete(
     result?: Record<string, unknown>,
   ) {
-    /*
-     * Defensive guard against:
-     *
-     * - double clicks
-     * - components accidentally calling
-     *   onComplete more than once
-     * - development-mode repeated events
-     */
-    if (completingRef.current) {
+    if (
+      completingRef.current
+    ) {
       return;
     }
 
-    completingRef.current = true;
+    completingRef.current =
+      true;
 
     const nodeKey =
       currentNode.key;
@@ -187,12 +198,10 @@ export function ProgramQuestShell({
       new Date().toISOString();
 
     const existing =
-      progress.nodes[nodeKey];
+      progress.nodes[
+        nodeKey
+      ];
 
-    /*
-     * First mark the current node as
-     * completed.
-     */
     const completedNodeKeys =
       progress.completedNodeKeys.includes(
         nodeKey,
@@ -203,17 +212,8 @@ export function ProgramQuestShell({
             nodeKey,
           ];
 
-    /*
-     * Temporarily create the progress
-     * state containing the completed node.
-     *
-     * We need this state when calculating
-     * the next destination because the next
-     * node may depend on the node we just
-     * completed.
-     */
-    const progressAfterCompletion: ProgramProgress =
-      {
+    const progressAfterCompletion:
+      ProgramProgress = {
         ...progress,
 
         completedNodeKeys,
@@ -244,14 +244,10 @@ export function ProgramQuestShell({
           },
         },
 
-        updatedAt: now,
+        updatedAt:
+          now,
       };
 
-    /*
-     * Determine where the journey should
-     * go next using the newly completed
-     * state.
-     */
     const destination =
       getNextDestination(
         mission,
@@ -259,28 +255,6 @@ export function ProgramQuestShell({
         progressAfterCompletion,
       );
 
-    console.log(
-      '[PROGRAM TRANSITION]',
-      {
-        currentNode:
-          nodeKey,
-        completed:
-          progressAfterCompletion
-            .completedNodeKeys,
-        destination,
-      },
-    );
-
-    /*
-     * currentNodeKey means:
-     *
-     * "the node the user is currently
-     * working on"
-     *
-     * rather than:
-     *
-     * "the last node completed".
-     */
     const nextCurrentNodeKey =
       destination.type ===
       'complete'
@@ -294,22 +268,16 @@ export function ProgramQuestShell({
         currentNodeKey:
           nextCurrentNodeKey,
 
-        updatedAt: now,
+        updatedAt:
+          now,
       };
 
-    /*
-     * Persist before navigation.
-     *
-     * This means that if the user refreshes
-     * immediately after navigation, the
-     * completed state already exists.
-     */
     updateProgress(
       nextProgress,
     );
 
     /*
-     * Mission is complete.
+     * Quest/mission journey complete.
      */
     if (
       destination.type ===
@@ -323,7 +291,7 @@ export function ProgramQuestShell({
     }
 
     /*
-     * Destination is a mission-level node.
+     * Next node is a mission-level node.
      */
     if (
       destination.type ===
@@ -337,7 +305,7 @@ export function ProgramQuestShell({
     }
 
     /*
-     * Destination is another quest node.
+     * Next node is another quest.
      */
     router.push(
       `/program/mission/${destination.missionId}/quest/${destination.questId}?node=${destination.nodeKey}`,
@@ -345,11 +313,9 @@ export function ProgramQuestShell({
   }
 
   function handleBack() {
-    /*
-     * Don't allow Back while a completion
-     * transition is underway.
-     */
-    if (completingRef.current) {
+    if (
+      completingRef.current
+    ) {
       return;
     }
 
@@ -364,65 +330,55 @@ export function ProgramQuestShell({
     }
 
     /*
-     * Only allow back navigation within
-     * the current quest.
-     *
-     * We don't want the Quest Shell
-     * suddenly taking the user to a
-     * mission-level node or another quest.
+     * If previous node is a mission node,
+     * navigate back to mission container.
      */
     if (
-      previous.container.type !==
-        'quest' ||
-      previous.container.key !==
-        questId
+      previous.container.type ===
+      'mission'
     ) {
+      router.push(
+        `/program/mission/${mission.key}?node=${previous.key}`,
+      );
+
       return;
     }
 
-    setCurrentNode(
-      previous,
+    /*
+     * Previous node belongs to a quest.
+     */
+    if (
+      previous.container.type ===
+        'quest' &&
+      previous.container.key ===
+        questId
+    ) {
+      setCurrentNode(
+        previous,
+      );
+
+      return;
+    }
+
+    /*
+     * Previous node belongs to a
+     * different quest.
+     */
+    router.push(
+      `/program/mission/${mission.key}/quest/${previous.container.key}?node=${previous.key}`,
     );
   }
-
-  /*
-   * Defensive handling in case the node
-   * somehow isn't part of the quest.
-   */
-  if (
-    nodes.length === 0 ||
-    currentIndex === -1
-  ) {
-    return (
-      <div className="rounded-lg border p-6">
-        <p className="text-sm text-muted-foreground">
-          This quest node could not be
-          found.
-        </p>
-      </div>
-    );
-  }
-
-  const progressPercent =
-    ((currentIndex + 1) /
-      nodes.length) *
-    100;
 
   return (
     <div className="space-y-8">
-      {/* Progress */}
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
-            Step {currentIndex + 1} of{' '}
-            {nodes.length}
+            Mission {mission.sequence}
           </span>
 
           <span>
-            {Math.round(
-              progressPercent,
-            )}
-            %
+            Step {currentIndex + 1}
           </span>
         </div>
 
@@ -430,37 +386,37 @@ export function ProgramQuestShell({
           <div
             className="h-full rounded-full bg-primary transition-all"
             style={{
-              width: `${progressPercent}%`,
+              width: `${
+                nodes.length > 0
+                  ? ((currentIndex + 1) /
+                      nodes.length) *
+                    100
+                  : 0
+              }%`,
             }}
           />
         </div>
       </div>
 
-      {/* Current node */}
       <ProgramNodeRenderer
         node={currentNode}
-        context={{}}
+        context={context}
         progress={nodeProgress}
         onComplete={
           handleComplete
         }
       />
 
-      {/* Back */}
       {currentIndex > 0 && (
         <button
           type="button"
           onClick={handleBack}
-          disabled={
-            completingRef.current
-          }
-          className="text-sm text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+          className="text-sm text-muted-foreground hover:text-foreground"
         >
           ← Back
         </button>
       )}
 
-      {/* Development state */}
       <details className="rounded-lg border p-4">
         <summary className="cursor-pointer text-sm font-medium">
           Development state
@@ -469,25 +425,24 @@ export function ProgramQuestShell({
         <pre className="mt-4 overflow-auto text-xs">
           {JSON.stringify(
             {
+              mission:
+                mission.key,
+
+              quest:
+                questId,
+
               currentNode:
                 currentNode.key,
-
-              currentNodeIndex:
-                currentIndex,
 
               completed:
                 progress.completedNodeKeys,
 
-              currentNodeProgress:
-                progress.nodes[
-                  currentNode.key
-                ] ?? null,
+              journey:
+                'registered',
 
-              destination:
-                getNextDestination(
-                  mission,
-                  currentNode.key,
-                  progress,
+              context:
+                Object.keys(
+                  context,
                 ),
             },
             null,
@@ -498,4 +453,3 @@ export function ProgramQuestShell({
     </div>
   );
 }
-

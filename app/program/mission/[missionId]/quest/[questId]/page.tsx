@@ -1,4 +1,6 @@
-import { notFound } from 'next/navigation';
+import {
+  notFound,
+} from 'next/navigation';
 
 import {
   getMission,
@@ -48,31 +50,14 @@ export default async function QuestPage({
     notFound();
   }
 
-  const quest =
-    mission.quests?.find(
-      (item) =>
-        item.key === questId,
-    );
-
   /*
-   * If quests are currently represented
-   * only by node containers in mission1.ts,
-   * derive a minimal quest representation
-   * from the nodes.
+   * Quests are represented by node
+   * containers in the current program
+   * architecture.
+   *
+   * There is no mission.quests collection
+   * to query here.
    */
-  if (!quest) {
-    const questNodes =
-      getContainerNodes(
-        mission,
-        'quest',
-        questId,
-      );
-
-    if (questNodes.length === 0) {
-      notFound();
-    }
-  }
-
   const questNodes =
     getContainerNodes(
       mission,
@@ -80,7 +65,10 @@ export default async function QuestPage({
       questId,
     );
 
-  if (questNodes.length === 0) {
+  if (
+    questNodes.length ===
+    0
+  ) {
     notFound();
   }
 
@@ -121,15 +109,8 @@ export default async function QuestPage({
           </p>
 
           <h1 className="text-3xl font-semibold">
-            {quest?.title ??
-              questId}
+            {questId}
           </h1>
-
-          {quest?.description && (
-            <p className="text-muted-foreground">
-              {quest.description}
-            </p>
-          )}
         </header>
 
         <ProgramQuestShell

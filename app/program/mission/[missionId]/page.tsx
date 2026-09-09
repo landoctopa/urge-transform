@@ -1,4 +1,6 @@
-import { notFound } from 'next/navigation';
+import {
+  notFound,
+} from 'next/navigation';
 
 import {
   getMission,
@@ -31,11 +33,13 @@ export default async function MissionPage({
   params,
   searchParams,
 }: MissionPageProps) {
-  const { missionId } =
-    await params;
+  const {
+    missionId,
+  } = await params;
 
-  const { node: nodeKey } =
-    await searchParams;
+  const {
+    node: nodeKey,
+  } = await searchParams;
 
   const mission =
     getMission(missionId);
@@ -51,7 +55,10 @@ export default async function MissionPage({
       mission.key,
     );
 
-  if (missionNodes.length === 0) {
+  if (
+    missionNodes.length ===
+    0
+  ) {
     notFound();
   }
 

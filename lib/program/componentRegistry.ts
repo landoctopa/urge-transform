@@ -1,5 +1,8 @@
 import type { ComponentType } from 'react';
 import type { ProgramNode } from './types';
+import type {
+  ProgramNodeContext,
+} from '@/lib/program/context';
 
 import { SituationExplorer } from '@/components/program/mission1/SituationExplorer';
 import { WhyHaventYouStarted } from '@/components/program/mission1/WhyHaventYouStarted';
@@ -32,7 +35,7 @@ import { MissionCommitment } from '@/components/program/mission1/MissionCommitme
 export interface ProgramComponentProps {
   node: ProgramNode;
 
-  context: Record<string, unknown>;
+  context: ProgramNodeContext;
 
   progress: {
     status: 'not_started' | 'in_progress' | 'completed';
