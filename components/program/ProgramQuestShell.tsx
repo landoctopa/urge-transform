@@ -7,43 +7,15 @@ import {
   useState,
 } from 'react';
 
-import {
-  useRouter,
-} from 'next/navigation';
-
-import type {
-  ProgramMission,
-  ProgramNode,
-} from '@/lib/program/types';
-
-import type {
-  ProgramProgress,
-} from '@/lib/program/progress';
-
-import {
-  getNodeProgress,
-} from '@/lib/program/progress';
-
-import {
-  getContainerNodes,
-  getNextDestination,
-  getPreviousNode,
-} from '@/lib/program/getCurrentNode';
-
-import {
-  loadProgress,
-  saveProgress,
-} from '@/lib/program/progressStore';
-
-import {
-  buildNodeContext,
-} from '@/lib/program/context';
-
-import {
-  registerJourney,
-} from '@/lib/program/journey';
-
+import { useRouter,} from 'next/navigation';
+import type { ProgramMission, ProgramNode,} from '@/lib/program/types';
+import type { ProgramProgress,} from '@/lib/program/progress';
+import { getNodeProgress,} from '@/lib/program/progress';
+import { getContainerNodes, getNextDestination, getPreviousNode,} from '@/lib/program/getCurrentNode';
+import { loadProgress, saveProgress,} from '@/lib/program/progressStore';
+import { buildNodeContext,} from '@/lib/program/context';
 import { ProgramNodeRenderer } from './ProgramNodeRenderer';
+import {registerJourney,ensureJourneyHydration} from '@/lib/program/journey';
 
 interface ProgramQuestShellProps {
   mission: ProgramMission;
@@ -58,53 +30,62 @@ export function ProgramQuestShell({
   initialNode,
   initialProgress,
 }: ProgramQuestShellProps) {
-  const router =
-    useRouter();
+  const router = useRouter();
 
-  const nodes =
-    useMemo(
-      () =>
+  const nodes = useMemo(() =>
         getContainerNodes(
           mission,
           'quest',
           questId,
         ),
-      [
-        mission,
-        questId,
-      ],
+      [mission,questId],
     );
 
-  const [
-    progress,
-    setProgress,
-  ] = useState<ProgramProgress>(
-    initialProgress,
-  );
-
-  const [
-    currentNode,
-    setCurrentNode,
-  ] = useState<ProgramNode>(
-    initialNode,
-  );
-
-  const completingRef =
-    useRef(false);
+  const [progress,setProgress] = useState<ProgramProgress>(initialProgress);
+  const [currentNode,setCurrentNode] = useState<ProgramNode>(initialNode);
+  const completingRef = useRef(false);
 
   /*
-   * Register the current node with
-   * the Journey Runtime.
-   */
-  useEffect(() => {
-    registerJourney(
-      mission,
-      currentNode,
-    );
-  }, [
-    mission,
-    currentNode,
-  ]);
+ * Register the current node with
+ * the Journey Runtime and ensure
+ * the domains required by this journey
+ * are hydrated.
+ */
+useEffect(() => {
+  let cancelled = false;
+
+  async function prepareJourney() {
+    try {
+      registerJourney(
+        mission,
+        currentNode,
+      );
+
+      await ensureJourneyHydration(
+        mission,
+        currentNode,
+      );
+    } catch (error) {
+      if (cancelled) {
+        return;
+      }
+
+      console.error(
+        '[PROGRAM] Failed to hydrate journey',
+        error,
+      );
+    }
+  }
+
+  prepareJourney();
+
+  return () => {
+    cancelled = true;
+  };
+}, [
+  mission,
+  currentNode,
+]);
 
   /*
    * Restore progress only.
