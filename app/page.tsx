@@ -1,51 +1,64 @@
-
-import Link from "next/link";
+import Link from 'next/link';
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-zinc-50 px-6 py-16 dark:bg-black">
-      <div className="mx-auto flex max-w-4xl flex-col gap-12">
-        <header className="space-y-4">
-          <p className="text-sm font-medium uppercase tracking-wider text-zinc-500">
-            Program Development
-          </p>
+    <main className="min-h-screen bg-background">
+      <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-6 py-8">
+        <header className="flex items-center justify-between">
+          <Link
+            href="/"
+            className="text-xl font-bold tracking-tight"
+          >
+            urge
+          </Link>
 
-          <h1 className="text-4xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
-            Program
-          </h1>
-
-          <p className="max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Development environment for testing the program journey,
-            missions, quests, nodes, components, and progress flow.
-          </p>
+          <Link
+            href="/discover"
+            className="text-sm font-medium text-muted-foreground transition hover:text-foreground"
+          >
+            Explore Urge
+          </Link>
         </header>
 
-        <section className="grid gap-4 sm:grid-cols-2">
-          <Link
-            href="/program/mission/mission-1"
-            className="group rounded-2xl border border-zinc-200 bg-white p-6 transition hover:border-zinc-400 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-600"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-3">
-                <p className="text-sm font-medium text-zinc-500">
-                  Mission 1
-                </p>
+        <section className="flex flex-1 items-center py-20">
+          <div className="max-w-4xl space-y-8">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
+              For people who want to move
+            </p>
 
-                <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
-                  Start With Yourself
-                </h2>
-
-                <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-                  Test the complete Mission 1 journey, including
-                  mission nodes, quests, transitions, and progress.
-                </p>
-              </div>
-
-              <span className="text-xl text-zinc-400 transition-transform group-hover:translate-x-1">
-                →
+            <h1 className="text-5xl font-semibold tracking-tight sm:text-7xl">
+              You know there&apos;s something
+              more.
+              <br />
+              <span className="text-muted-foreground">
+                Let&apos;s figure out what it is.
               </span>
+            </h1>
+
+            <p className="max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl">
+              Urge helps you turn uncertainty into
+              movement — by understanding what matters,
+              exploring what could be next, and taking
+              action before you have everything figured
+              out.
+            </p>
+
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/discover"
+                className="inline-flex items-center justify-center rounded-full bg-primary px-7 py-3.5 font-medium text-primary-foreground transition hover:opacity-90"
+              >
+                Find out if Urge is for you
+              </Link>
+
+              <Link
+                href="/program/mission/mission-1"
+                className="inline-flex items-center justify-center rounded-full border border-border px-7 py-3.5 font-medium transition hover:bg-muted"
+              >
+                Program preview
+              </Link>
             </div>
-          </Link>
+          </div>
         </section>
       </div>
     </main>
