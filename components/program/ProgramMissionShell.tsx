@@ -7,43 +7,21 @@ import {
   useState,
 } from 'react';
 
-import {
-  useRouter,
-} from 'next/navigation';
-
-import type {
-  ProgramMission,
-  ProgramNode,
-} from '@/lib/program/types';
-
-import type {
-  ProgramProgress,
-} from '@/lib/program/progress';
-
-import {
-  getNodeProgress,
-} from '@/lib/program/progress';
-
+import { useRouter } from 'next/navigation';
+import type { ProgramMission, ProgramNode } from '@/lib/program/types';
+import type { ProgramProgress } from '@/lib/program/progress';
+import { getNodeProgress } from '@/lib/program/progress';
 import {
   getContainerNodes,
   getNextDestination,
   getPreviousNode,
 } from '@/lib/program/getCurrentNode';
-
-import {
-  loadProgress,
-  saveProgress,
-} from '@/lib/program/progressStore';
-
-import {
-  buildNodeContext,
-} from '@/lib/program/context';
-
-import {
-  registerJourney,
-} from '@/lib/program/journey';
-
+import { loadProgress, saveProgress } from '@/lib/program/progressStore';
+import { buildNodeContext } from '@/lib/program/context';
 import { ProgramNodeRenderer } from './ProgramNodeRenderer';
+import {
+  registerJourney, ensureJourneyHydration
+} from '@/lib/program/journey';
 
 interface ProgramMissionShellProps {
   mission: ProgramMission;
@@ -56,50 +34,47 @@ export function ProgramMissionShell({
   initialNode,
   initialProgress,
 }: ProgramMissionShellProps) {
-  const router =
-    useRouter();
+  const router = useRouter();
 
-  const nodes =
-    useMemo(
-      () =>
-        getContainerNodes(
-          mission,
-          'mission',
-          mission.key,
-        ),
-      [mission],
-    );
-
-  const [
-    progress,
-    setProgress,
-  ] = useState<ProgramProgress>(
-    initialProgress,
+  const nodes = useMemo(() =>
+    getContainerNodes(
+      mission,
+      'mission',
+      mission.key,
+    ),
+    [mission],
   );
 
-  const [
-    currentNode,
-    setCurrentNode,
-  ] = useState<ProgramNode>(
-    initialNode,
-  );
-
-  const completingRef =
-    useRef(false);
+  const [progress, setProgress] = useState<ProgramProgress>(initialProgress);
+  const [currentNode, setCurrentNode] = useState<ProgramNode>(initialNode);
+  const completingRef = useRef(false);
 
   /*
    * Register the current journey
    * whenever the displayed node changes.
    */
   useEffect(() => {
-    registerJourney(
-      mission,
-      currentNode,
-    );
-  }, [
-    mission,
-    currentNode,
-  ]);
+    let cancelled = false;
+
+    async function prepareJourney() {
+      try {
+        registerJourney(mission, currentNode);
+        await ensureJourneyHydration(mission, currentNode);
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        console.error('[PROGRAM] Failed to hydrate journey', error);
+      }
+    }
+
+    prepareJourney();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [mission, currentNode]);
 
   /*
    * Restore persisted progress.
@@ -113,19 +88,10 @@ export function ProgramMissionShell({
    * The URL/page is authoritative.
    */
   useEffect(() => {
-    const stored =
-      loadProgress(
-        mission.key,
-      );
-
-    if (!stored) {
-      return;
-    }
-
+    const stored = loadProgress(mission.key);
+    if (!stored) { return; }
     setProgress(stored);
-  }, [
-    mission.key,
-  ]);
+  }, [mission.key]);
 
   /*
    * Reset completion guard whenever
@@ -134,34 +100,23 @@ export function ProgramMissionShell({
   useEffect(() => {
     completingRef.current =
       false;
-  }, [
-    currentNode.key,
-  ]);
+  }, [currentNode.key]);
 
   /*
    * Keep the shell aligned with a new
    * server-selected node.
    */
   useEffect(() => {
-    setCurrentNode(
-      initialNode,
-    );
-  }, [
-    initialNode,
-  ]);
+    setCurrentNode(initialNode,);
+  }, [initialNode]);
 
   const currentIndex =
-    nodes.findIndex(
-      (node) =>
-        node.key ===
-        currentNode.key,
+    nodes.findIndex((node) =>
+      node.key ===
+      currentNode.key,
     );
 
-  const nodeProgress =
-    getNodeProgress(
-      progress,
-      currentNode,
-    );
+  const nodeProgress = getNodeProgress(progress, currentNode);
 
   /*
    * Context is deliberately built
@@ -170,86 +125,47 @@ export function ProgramMissionShell({
    * Hydration has already happened
    * at the mission boundary.
    */
-  const context =
-    buildNodeContext(
-      currentNode,
-    );
+  const context = buildNodeContext(currentNode,);
 
-  function updateProgress(
-    next: ProgramProgress,
-  ) {
+  function updateProgress(next: ProgramProgress) {
     setProgress(next);
     saveProgress(next);
   }
 
-  async function handleComplete(
-    result?: Record<string, unknown>,
-  ) {
-    if (
-      completingRef.current
-    ) {
+  async function handleComplete(result?: Record<string, unknown>) {
+    if (completingRef.current) {
       return;
     }
 
-    completingRef.current =
-      true;
+    completingRef.current = true;
+    const nodeKey = currentNode.key;
+    const now = new Date().toISOString();
 
-    const nodeKey =
-      currentNode.key;
+    const existing = progress.nodes[nodeKey];
 
-    const now =
-      new Date().toISOString();
-
-    const existing =
-      progress.nodes[
-        nodeKey
+    const completedNodeKeys = progress.completedNodeKeys.includes(nodeKey,) ? progress.completedNodeKeys
+      : [
+        ...progress.completedNodeKeys,
+        nodeKey,
       ];
 
-    const completedNodeKeys =
-      progress.completedNodeKeys.includes(
-        nodeKey,
-      )
-        ? progress.completedNodeKeys
-        : [
-            ...progress.completedNodeKeys,
-            nodeKey,
-          ];
+    const progressAfterCompletion: ProgramProgress = {
+      ...progress, completedNodeKeys,
+      nodes: {
+        ...progress.nodes,
 
-    const progressAfterCompletion:
-      ProgramProgress = {
-        ...progress,
-
-        completedNodeKeys,
-
-        nodes: {
-          ...progress.nodes,
-
-          [nodeKey]: {
-            nodeKey,
-
-            status:
-              'completed',
-
-            startedAt:
-              existing?.startedAt ??
-              now,
-
-            completedAt:
-              now,
-
-            payload:
-              result ??
-              existing?.payload ??
-              {},
-
-            aiData:
-              existing?.aiData,
-          },
+        [nodeKey]: {
+          nodeKey,
+          status: 'completed',
+          startedAt: existing?.startedAt ?? now,
+          completedAt: now,
+          payload: result ?? existing?.payload ?? {},
+          aiData: existing?.aiData,
         },
+      },
 
-        updatedAt:
-          now,
-      };
+      updatedAt: now,
+    };
 
     const destination =
       getNextDestination(
@@ -260,24 +176,17 @@ export function ProgramMissionShell({
 
     const nextCurrentNodeKey =
       destination.type ===
-      'complete'
+        'complete'
         ? undefined
         : destination.nodeKey;
 
-    const nextProgress:
-      ProgramProgress = {
-        ...progressAfterCompletion,
+    const nextProgress: ProgramProgress = {
+      ...progressAfterCompletion,
+      currentNodeKey: nextCurrentNodeKey,
+      updatedAt: now,
+    };
 
-        currentNodeKey:
-          nextCurrentNodeKey,
-
-        updatedAt:
-          now,
-      };
-
-    updateProgress(
-      nextProgress,
-    );
+    updateProgress(nextProgress);
 
     /*
      * Mission complete.
@@ -286,10 +195,7 @@ export function ProgramMissionShell({
      * until the final decision/reveal
      * flow determines what happens next.
      */
-    if (
-      destination.type ===
-      'complete'
-    ) {
+    if (destination.type === 'complete') {
       return;
     }
 
@@ -297,10 +203,7 @@ export function ProgramMissionShell({
      * Next node remains inside the
      * mission container.
      */
-    if (
-      destination.type ===
-      'mission'
-    ) {
+    if (destination.type === 'mission') {
       const nextNode =
         mission.nodes.find(
           (node) =>
@@ -317,9 +220,7 @@ export function ProgramMissionShell({
         return;
       }
 
-      setCurrentNode(
-        nextNode,
-      );
+      setCurrentNode(nextNode);
 
       return;
     }
@@ -336,9 +237,7 @@ export function ProgramMissionShell({
   }
 
   function handleBack() {
-    if (
-      completingRef.current
-    ) {
+    if (completingRef.current) {
       return;
     }
 
@@ -348,20 +247,11 @@ export function ProgramMissionShell({
         currentNode.key,
       );
 
-    if (!previous) {
-      return;
-    }
+    if (!previous) { return; }
 
-    if (
-      previous.container.type !==
-      'mission'
-    ) {
-      return;
-    }
+    if (previous.container.type !== 'mission') { return; }
 
-    setCurrentNode(
-      previous,
-    );
+    setCurrentNode(previous);
   }
 
   return (
@@ -381,13 +271,12 @@ export function ProgramMissionShell({
           <div
             className="h-full rounded-full bg-primary transition-all"
             style={{
-              width: `${
-                nodes.length > 0
-                  ? ((currentIndex + 1) /
-                      nodes.length) *
-                    100
-                  : 0
-              }%`,
+              width: `${nodes.length > 0
+                ? ((currentIndex + 1) /
+                  nodes.length) *
+                100
+                : 0
+                }%`,
             }}
           />
         </div>
