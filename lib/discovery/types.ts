@@ -1,9 +1,13 @@
 export type DiscoveryStage =
   | 'orientation'
   | 'situation'
+  | 'future'
   | 'motivation'
+  | 'tension'
   | 'barrier'
-  | 'readiness';
+  | 'urge'
+  | 'readiness'
+  | 'commitment';
 
 export type DiscoverySituation =
   | 'starting'
@@ -15,11 +19,18 @@ export type DiscoverySituation =
 export interface DiscoveryState {
   version: 1;
   stage: DiscoveryStage;
+
   situation: DiscoverySituation | null;
+
   motivations: string[];
+
   barriers: string[];
+
   readiness: number | null;
+
   responses: Record<string, unknown>;
+
   startedAt: string;
+
   updatedAt: string;
 }

@@ -1,4 +1,4 @@
-import mission1 from './missions/mission1';
+import {mission1} from './missions/mission1';
 import type { ProgramMission } from './types';
 
 const missions: Record<string, ProgramMission> = {

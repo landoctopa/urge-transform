@@ -3,39 +3,60 @@ import type {
   DiscoveryState,
 } from './types';
 
-const STORAGE_KEY = 'urge.discovery.v1';
+const STORAGE_KEY =
+  'urge.discovery.v1';
 
 function createInitialState(): DiscoveryState {
-  const now = new Date().toISOString();
+  const now =
+    new Date().toISOString();
 
   return {
     version: 1,
+
     stage: 'orientation',
+
     situation: null,
+
     motivations: [],
+
     barriers: [],
+
     readiness: null,
+
     responses: {},
+
     startedAt: now,
+
     updatedAt: now,
   };
 }
 
 export function loadDiscoveryState(): DiscoveryState {
-  if (typeof window === 'undefined') {
+  if (
+    typeof window ===
+    'undefined'
+  ) {
     return createInitialState();
   }
 
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw =
+      window.localStorage.getItem(
+        STORAGE_KEY,
+      );
 
     if (!raw) {
       return createInitialState();
     }
 
-    const parsed = JSON.parse(raw) as DiscoveryState;
+    const parsed =
+      JSON.parse(
+        raw,
+      ) as DiscoveryState;
 
-    if (parsed.version !== 1) {
+    if (
+      parsed.version !== 1
+    ) {
       return createInitialState();
     }
 
@@ -48,7 +69,10 @@ export function loadDiscoveryState(): DiscoveryState {
 export function saveDiscoveryState(
   state: DiscoveryState,
 ): void {
-  if (typeof window === 'undefined') {
+  if (
+    typeof window ===
+    'undefined'
+  ) {
     return;
   }
 
@@ -56,18 +80,32 @@ export function saveDiscoveryState(
     STORAGE_KEY,
     JSON.stringify({
       ...state,
-      updatedAt: new Date().toISOString(),
+      updatedAt:
+        new Date().toISOString(),
     }),
   );
 }
 
 export function clearDiscoveryState(): void {
-  if (typeof window === 'undefined') {
+  if (
+    typeof window ===
+    'undefined'
+  ) {
     return;
   }
 
-  window.localStorage.removeItem(STORAGE_KEY);
+  window.localStorage.removeItem(
+    STORAGE_KEY,
+  );
 }
+
+/*
+ * Data mutations only.
+ *
+ * These functions deliberately do
+ * NOT control discovery progression.
+ * DiscoveryFlow owns the journey.
+ */
 
 export function setSituation(
   state: DiscoveryState,
@@ -75,9 +113,11 @@ export function setSituation(
 ): DiscoveryState {
   return {
     ...state,
+
     situation,
-    stage: 'motivation',
-    updatedAt: new Date().toISOString(),
+
+    updatedAt:
+      new Date().toISOString(),
   };
 }
 
@@ -87,9 +127,11 @@ export function setMotivations(
 ): DiscoveryState {
   return {
     ...state,
+
     motivations,
-    stage: 'barrier',
-    updatedAt: new Date().toISOString(),
+
+    updatedAt:
+      new Date().toISOString(),
   };
 }
 
@@ -99,9 +141,11 @@ export function setBarriers(
 ): DiscoveryState {
   return {
     ...state,
+
     barriers,
-    stage: 'readiness',
-    updatedAt: new Date().toISOString(),
+
+    updatedAt:
+      new Date().toISOString(),
   };
 }
 
@@ -111,7 +155,10 @@ export function setReadiness(
 ): DiscoveryState {
   return {
     ...state,
+
     readiness,
-    updatedAt: new Date().toISOString(),
+
+    updatedAt:
+      new Date().toISOString(),
   };
 }
