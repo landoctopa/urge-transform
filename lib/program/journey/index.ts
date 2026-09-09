@@ -17,6 +17,7 @@ export {
 
 export {
   registerJourney,
+  ensureJourneyHydration,
   applyJourneyHydration,
   getMissingHydrationDomains,
 } from './hydrationCoordinator';

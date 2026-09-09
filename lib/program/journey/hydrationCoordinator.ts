@@ -9,9 +9,17 @@ import type {
   HydrationDomain,
 } from '@/lib/program/hydration/types';
 
+import type {
+  ProgramHydrationState,
+} from '@/lib/program/hydration/types';
+
 import {
   hydrateProgramState,
 } from '@/lib/program/hydration/client';
+
+import {
+  hydrateProgramDomains,
+} from '@/app/actions/programHydration';
 
 import {
   $journeyStore,
@@ -28,24 +36,6 @@ import {
   resolveJourney,
 } from './journeyResolver';
 
-interface EnsureJourneyHydrationOptions {
-  mission: ProgramMission;
-  node: ProgramNode;
-  initialHydration?: Record<
-    string,
-    unknown
-  >;
-}
-
-/**
- * Hydrate the data required by the current
- * journey boundary.
- *
- * This function deliberately does NOT fetch
- * from Supabase itself. Server-side fetching
- * happens in the page and the resulting state
- * is passed here.
- */
 export function registerJourney(
   mission: ProgramMission,
   node: ProgramNode,
@@ -61,32 +51,6 @@ export function registerJourney(
   );
 }
 
-/**
- * Given the hydration returned by the server,
- * populate Nano Stores and update the runtime
- * hydration registry.
- */
-export function applyJourneyHydration(
-  state: Parameters<
-    typeof hydrateProgramState
-  >[0],
-  domains: HydrationDomain[],
-) {
-  hydrateProgramState(
-    state,
-  );
-
-  addHydratedDomains(
-    domains,
-  );
-
-  setHydratingDomains([]);
-}
-
-/**
- * Determine which domains still need to be
- * hydrated.
- */
 export function getMissingHydrationDomains(
   domains: HydrationDomain[],
 ): HydrationDomain[] {
@@ -105,4 +69,151 @@ export function getMissingHydrationDomains(
         domain,
       ),
   );
+}
+
+export function applyJourneyHydration(
+  state: ProgramHydrationState,
+  domains: HydrationDomain[],
+) {
+  if (
+    domains.length ===
+    0
+  ) {
+    return;
+  }
+
+  hydrateProgramState(
+    state,
+  );
+
+  addHydratedDomains(
+    domains,
+  );
+
+  setHydratingDomains(
+    [],
+  );
+}
+
+export async function ensureJourneyHydration(
+  mission: ProgramMission,
+  node?: ProgramNode,
+  initialHydration?: ProgramHydrationState,
+): Promise<void> {
+  const requiredDomains =
+    getHydrationDomains(
+      mission,
+      node,
+    );
+
+  const missingDomains =
+    getMissingHydrationDomains(
+      requiredDomains,
+    );
+
+  /*
+   * Everything this journey needs
+   * is already available locally.
+   */
+  if (
+    missingDomains.length ===
+    0
+  ) {
+    return;
+  }
+
+  /*
+   * If the server already supplied
+   * hydration for this journey,
+   * consume that first.
+   */
+  if (initialHydration) {
+    const suppliedDomains =
+      requiredDomains.filter(
+        (domain) =>
+          initialHydration[
+            domain
+          ] !== undefined,
+      );
+
+    const usableDomains =
+      suppliedDomains.filter(
+        (domain) =>
+          missingDomains.includes(
+            domain,
+          ),
+      );
+
+    if (
+      usableDomains.length > 0
+    ) {
+      applyJourneyHydration(
+        initialHydration,
+        usableDomains,
+      );
+    }
+  }
+
+  /*
+   * Recalculate after applying any
+   * server-provided hydration.
+   */
+  const stillMissing =
+    getMissingHydrationDomains(
+      requiredDomains,
+    );
+
+  if (
+    stillMissing.length ===
+    0
+  ) {
+    return;
+  }
+
+  /*
+   * Mark these domains as being
+   * hydrated before making the request.
+   *
+   * This prevents duplicate requests
+   * if the component renders again.
+   */
+  setHydratingDomains(
+    stillMissing,
+  );
+
+  try {
+    const result =
+      await hydrateProgramDomains({
+        missionKey:
+          mission.key,
+
+        domains:
+          stillMissing,
+      });
+
+    if (
+      !result.success ||
+      !result.data
+    ) {
+      throw new Error(
+        result.error ??
+          'Program hydration failed',
+      );
+    }
+
+    applyJourneyHydration(
+      result.data,
+      stillMissing,
+    );
+  } catch (error) {
+    /*
+     * Clear the in-flight marker so
+     * a subsequent attempt can retry.
+     */
+    setHydratingDomains(
+      [],
+    );
+
+    throw error;
+  }
 }
