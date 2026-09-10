@@ -1,14 +1,36 @@
-## Feedback and notes
+## Hero Section
+this oveall seems great maybe we can think about subtle cues in the background. But I wouldn't worry about it too much for now
 
-I agree with your overall direction but I would add few things to it. We can figure out how to integrate them as we go along. Go through them and tell me what do you feel and then we will design the homepage around larger picture, urge and  user discovery within it:
+## The story we've been told
+This seems too wordy and we can condense the text and make it a bit punchy. idea is to reduce the cognitive load and get message across easily. maybe introduce animations for the points
+  - You need money.
+  - You need connections.
+  - You need a great idea.
+  - You need experience.
+  - You need to know what you're doing.
 
-1. "It is selling the possibility of a different trajectory" - This is correct but i would reframe it from possibility angle. Main reason of building Urge was to address the following big concerns and ideas -
-  - People have successfully created business throughout human history. And there are endless instances of people doing it without lot of resources, money, access to vast network, skills, educatiion and training.
-  - In the chaotic times like today when people are not sure of future, job, livelihood, betting on themselves is always the smartest option.
-  - Not all businesses have to be unicorn as the venture world sees them. This has created has a adverse impact of the startup world from enabling more people to start it is optimized to a subset of high growth in-hype idea to be amplified and other have been largely excluded.
-  - Anyone can start a business, trick is to figure out what is right business  for them to start. It can be of different types, scales, business models. It is in many ways a reflection of the founder.
-  - Local problems need local solutions: When people from all walks and background start creating businesses address problems they understand and experience, it benefits everyone.
-  - It is important today to go back to fundamentals of business,away from the business schools and venture capitals. Make it available for everyone to start what they want to at a scale they can handle
-  - We have to frame urge in the context: Where biggest hurdle to people are themselves. Once they overcome that hurdel rest often finds a way and we are there to guide them through it all
-  - So in many ways it goes beyong just changing trajectories its about making people realize that its not some magic or something that select few can think of and accomplish. 
-  - The journey and program is just mechanics of how we have designed this transformation. 
+## Look closer
+- I think text and font size needs to improve. There are too many things competing for attention. We need to have a better visual hierarchy for fonts consistently right now i think its missing
+- table we have for (A shop. | A trade. | A service.| A craft. |An idea.) can have better visual language
+
+## Not every business needs to be a unicorn
+- i like the setup of this but there is a disconnect between title, cards and the message. the title is about size but the cards are for types. We can think of then having title reflect size and type
+- What do you think?
+
+## Start with what you already have
+- The text and font heirarchy isnt working
+- very difficult to read
+- i have attached screenshot
+
+## The part we don't talk about
+- text competing with eachother. look at attached screenshot
+
+## General Feedback
+We need to consider congnitive load when we have so much of text
+- UI and subtle animation to make things appear and disappear could help
+- Everything certainly need proper hierarchy (font size) and consistency in message
+- I see a flickr on the page every few seconds
+- I love the brand colours and how it has come out in the page
+- I think transistions, animation, background and font heirarchy would greatly help enhance this.
+
+Tell me what do you think?
