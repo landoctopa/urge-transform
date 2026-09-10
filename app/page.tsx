@@ -1,5 +1,5 @@
-import { DiscoveryFlow } from '@/components/discovery/DiscoveryFlow';
+import { HomeExperience } from "@/components/home/HomeExperience";
 
-export default function HomePage() {
-  return <DiscoveryFlow />;
+export default function Home() {
+  return <HomeExperience />;
 }
