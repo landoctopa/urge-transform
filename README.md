@@ -1,36 +1,22 @@
-## Hero Section
-this oveall seems great maybe we can think about subtle cues in the background. But I wouldn't worry about it too much for now
+## Server Console Error
 
-## The story we've been told
-This seems too wordy and we can condense the text and make it a bit punchy. idea is to reduce the cognitive load and get message across easily. maybe introduce animations for the points
-  - You need money.
-  - You need connections.
-  - You need a great idea.
-  - You need experience.
-  - You need to know what you're doing.
+```bash
+-----
+FATAL: An unexpected Turbopack error occurred. A panic log has been written to /tmp/next-panic-bd94a3ec5887ae4b957d633b54a3975a.log.
 
-## Look closer
-- I think text and font size needs to improve. There are too many things competing for attention. We need to have a better visual hierarchy for fonts consistently right now i think its missing
-- table we have for (A shop. | A trade. | A service.| A craft. |An idea.) can have better visual language
+To help make Turbopack better, report this error by clicking here.
+-----
 
-## Not every business needs to be a unicorn
-- i like the setup of this but there is a disconnect between title, cards and the message. the title is about size but the cards are for types. We can think of then having title reflect size and type
-- What do you think?
+[Server HMR] Subscription error, resubscribing: Error [TurbopackInternalError]: Cell CellId { type_id: ValueTypeId { id: 550, name: ValueType { name: "turbopack_ecmascript::hmr::version::EcmascriptMergedChunkVersion" } }, index: 0 } no longer exists in task TaskId { id: 185065 } <EcmascriptBuildNodeChunkListContent as VersionedContent>::update (no cell of this type exists)
 
-## Start with what you already have
-- The text and font heirarchy isnt working
-- very difficult to read
-- i have attached screenshot
+Debug info:
+- Execution of all_hmr_update_with_issues_operation failed
+- Execution of Project::all_hmr_update failed
+- Execution of <EcmascriptBuildNodeChunkListContent as VersionedContent>::update failed
+- Execution of <EcmascriptMergedChunkContent as VersionedContent>::update failed
+- Cell CellId { type_id: ValueTypeId { id: 550, name: ValueType { name: "turbopack_ecmascript::hmr::version::EcmascriptMergedChunkVersion" } }, index: 0 } no longer exists in task TaskId { id: 185065 } <EcmascriptBuildNodeChunkListContent as VersionedContent>::update (no cell of this type exists)
+    at <unknown> (TurbopackInternalError: Cell CellId { type_id: ValueTypeId { id: 550, name: ValueType { name: "turbopack_ecmascript::hmr::version::EcmascriptMergedChunkVersion" } }, index: 0 } no longer exists in task TaskId { id: 185065 } <EcmascriptBuildNodeChunkListContent as VersionedContent>::update (no cell of this type exists)) {
+  location: undefined
+}
 
-## The part we don't talk about
-- text competing with eachother. look at attached screenshot
-
-## General Feedback
-We need to consider congnitive load when we have so much of text
-- UI and subtle animation to make things appear and disappear could help
-- Everything certainly need proper hierarchy (font size) and consistency in message
-- I see a flickr on the page every few seconds
-- I love the brand colours and how it has come out in the page
-- I think transistions, animation, background and font heirarchy would greatly help enhance this.
-
-Tell me what do you think?
+```
