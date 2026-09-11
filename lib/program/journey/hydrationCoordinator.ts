@@ -19,7 +19,7 @@ import {
 
 import {
   hydrateProgramDomains,
-} from '@/app/actions/programHydration';
+} from '@/actions/programHydration';
 
 import {
   $journeyStore,
