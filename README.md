@@ -1,22 +1,30 @@
-## Server Console Error
+# Feedback
+- Overall this is much improved version
 
-```bash
------
-FATAL: An unexpected Turbopack error occurred. A panic log has been written to /tmp/next-panic-bd94a3ec5887ae4b957d633b54a3975a.log.
+## Hero
+- title text: I would just have "You already have what is takes to start" rather than "You might already have what it takes to start."
 
-To help make Turbopack better, report this error by clicking here.
------
+## The story we’ve been told
+- text gets cut on the bottom of animation when text go to second line. 
+- the animated text could be smaller font. It competing with the title
+- Maybe below the animated text is too small to be noticed
 
-[Server HMR] Subscription error, resubscribing: Error [TurbopackInternalError]: Cell CellId { type_id: ValueTypeId { id: 550, name: ValueType { name: "turbopack_ecmascript::hmr::version::EcmascriptMergedChunkVersion" } }, index: 0 } no longer exists in task TaskId { id: 185065 } <EcmascriptBuildNodeChunkListContent as VersionedContent>::update (no cell of this type exists)
+## Look closer
+- UI is much better
+- The font is too large for the list items
 
-Debug info:
-- Execution of all_hmr_update_with_issues_operation failed
-- Execution of Project::all_hmr_update failed
-- Execution of <EcmascriptBuildNodeChunkListContent as VersionedContent>::update failed
-- Execution of <EcmascriptMergedChunkContent as VersionedContent>::update failed
-- Cell CellId { type_id: ValueTypeId { id: 550, name: ValueType { name: "turbopack_ecmascript::hmr::version::EcmascriptMergedChunkVersion" } }, index: 0 } no longer exists in task TaskId { id: 185065 } <EcmascriptBuildNodeChunkListContent as VersionedContent>::update (no cell of this type exists)
-    at <unknown> (TurbopackInternalError: Cell CellId { type_id: ValueTypeId { id: 550, name: ValueType { name: "turbopack_ecmascript::hmr::version::EcmascriptMergedChunkVersion" } }, index: 0 } no longer exists in task TaskId { id: 185065 } <EcmascriptBuildNodeChunkListContent as VersionedContent>::update (no cell of this type exists)) {
-  location: undefined
-}
+## Scale is not the point
+this is very good font hierarchy
 
-```
+## Start with what you already have
+- the list text font is too large
+
+## The part we don't talk about
+We have to figure out better way to have these two sentences. they make sense but seem a bit too much on screen
+- Maybe the hardest part isn't building a business.
+- Maybe it's believing you could build one.
+maybe juxtapose them with one black and white card in full-width section so they feel better next to each
+
+## You don't have to do it alone
+this whole text is title font which is too much of large font seems like its screaming at me -> You start with what you have.
+We help you figure out what to do with it.

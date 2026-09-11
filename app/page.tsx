@@ -1,5 +1,5 @@
-import { UrgeHomepage } from "@/components/home/UrgeHomepage";
+import { Homepage } from "@/components/homepage/Homepage";
 
 export default function Home() {
-  return <UrgeHomepage />;
+  return <Homepage />;
 }
