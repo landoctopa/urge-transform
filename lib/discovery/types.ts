@@ -25,8 +25,7 @@ export type DiscoveryChoice =
 export type DiscoveryStep =
   | 'situation'
   | 'hurdle'
-  | 'reveal'
-  | 'choice';
+  | 'reveal';
 
 export interface DiscoveryState {
   version: 1;
@@ -49,7 +48,16 @@ export interface DiscoveryReveal {
   headline: string;
   subheadline: string;
 
-  reasons: Array<{
+  recognition: string;
+
+  support: Array<{
+    title: string;
+    description: string;
+  }>;
+
+  ecosystemIntro: string;
+
+  ecosystem: Array<{
     title: string;
     description: string;
   }>;

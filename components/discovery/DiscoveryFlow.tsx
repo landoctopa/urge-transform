@@ -1,3 +1,5 @@
+// components/discovery/DiscoveryFlow.tsx
+
 'use client';
 
 import {
@@ -33,13 +35,11 @@ import type {
 import { DiscoverySituation } from './DiscoverySituation';
 import { DiscoveryHurdle } from './DiscoveryHurdle';
 import { DiscoveryReveal } from './DiscoveryReveal';
-import { DiscoveryChoice as DiscoveryChoiceView } from './DiscoveryChoice';
 
 const STEPS: DiscoveryStep[] = [
   'situation',
   'hurdle',
   'reveal',
-  'choice',
 ];
 
 export function DiscoveryFlow() {
@@ -47,18 +47,18 @@ export function DiscoveryFlow() {
     useState<DiscoveryState | null>(null);
 
   const [step, setStep] =
-    useState<DiscoveryStep>('situation');
-
-  const [selectedChoice, setSelectedChoice] =
-    useState<DiscoveryChoice | null>(null);
+    useState<DiscoveryStep>(
+      'situation',
+    );
 
   const [ready, setReady] =
     useState(false);
 
   /*
-   * Restore anonymous discovery state.
+   * Restore anonymous Discovery state.
    *
-   * Discovery is independent of Program state.
+   * Discovery remains completely separate
+   * from Program/Journey state.
    */
   useEffect(() => {
     const stored =
@@ -67,10 +67,17 @@ export function DiscoveryFlow() {
     if (stored) {
       setState(stored);
 
-      if (stored.hurdle) {
+      if (
+        stored.situation &&
+        stored.hurdle
+      ) {
         setStep('reveal');
-      } else if (stored.situation) {
+      } else if (
+        stored.situation
+      ) {
         setStep('hurdle');
+      } else {
+        setStep('situation');
       }
     } else {
       setState(
@@ -82,7 +89,7 @@ export function DiscoveryFlow() {
   }, []);
 
   /*
-   * Persist discovery independently.
+   * Persist anonymous Discovery state.
    */
   useEffect(() => {
     if (!state) {
@@ -159,10 +166,37 @@ export function DiscoveryFlow() {
       [],
     );
 
-  const choose =
+  /*
+   * These destinations are intentionally
+   * not implemented yet.
+   *
+   * Registration/payment will be connected
+   * after we validate the Discovery experience.
+   */
+  const handleChoice =
     useCallback(
       (choice: DiscoveryChoice) => {
-        setSelectedChoice(choice);
+        if (choice === 'join') {
+          /*
+           * TODO:
+           * Navigate to registration with
+           * intent = "join".
+           */
+          console.log(
+            'Discovery choice: join',
+          );
+
+          return;
+        }
+
+        /*
+         * TODO:
+         * Navigate to registration with
+         * intent = "try_first".
+         */
+        console.log(
+          'Discovery choice: try_first',
+        );
       },
       [],
     );
@@ -176,7 +210,9 @@ export function DiscoveryFlow() {
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto w-full max-w-6xl px-6 pb-24 pt-8 sm:px-10 lg:px-12">
-        {/* Header */}
+        {/* ------------------------------------------------
+         * Header
+         * ------------------------------------------------ */}
         <header className="flex items-center justify-between">
           <div className="text-sm font-semibold tracking-[-0.03em]">
             urge
@@ -187,7 +223,9 @@ export function DiscoveryFlow() {
           </div>
         </header>
 
-        {/* Progress */}
+        {/* ------------------------------------------------
+         * Progress
+         * ------------------------------------------------ */}
         <div className="mt-8 h-px bg-border">
           <div
             className="h-px bg-primary transition-all duration-700 ease-out"
@@ -197,7 +235,9 @@ export function DiscoveryFlow() {
           />
         </div>
 
-        {/* Content */}
+        {/* ------------------------------------------------
+         * Content
+         * ------------------------------------------------ */}
         <div className="mx-auto mt-20 max-w-5xl sm:mt-28">
           {step === 'situation' && (
             <DiscoverySituation
@@ -227,35 +267,11 @@ export function DiscoveryFlow() {
             reveal && (
               <DiscoveryReveal
                 reveal={reveal}
-                onContinue={() =>
-                  setStep('choice')
+                onChoose={
+                  handleChoice
                 }
               />
             )}
-
-          {step === 'choice' && (
-            <>
-              <DiscoveryChoiceView
-                onChoose={choose}
-              />
-
-              {selectedChoice && (
-                <div className="mt-10 border border-primary/30 bg-primary/[0.04] p-5 text-sm">
-                  <p className="font-medium">
-                    {selectedChoice ===
-                    'join'
-                      ? 'Join Urge selected.'
-                      : 'Try the first mission selected.'}
-                  </p>
-
-                  <p className="mt-1 text-muted-foreground">
-                    Registration will be connected
-                    here next.
-                  </p>
-                </div>
-              )}
-            </>
-          )}
         </div>
       </div>
     </main>

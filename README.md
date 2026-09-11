@@ -1,30 +1,15 @@
-# Feedback
-- Overall this is much improved version
+Overall flow is great. I just want to enhance the reveal and choice action in the discovery flow. Let me what you think of my suggestions -> 
 
-## Hero
-- title text: I would just have "You already have what is takes to start" rather than "You might already have what it takes to start."
-
-## The story we’ve been told
-- text gets cut on the bottom of animation when text go to second line. 
-- the animated text could be smaller font. It competing with the title
-- Maybe below the animated text is too small to be noticed
-
-## Look closer
-- UI is much better
-- The font is too large for the list items
-
-## Scale is not the point
-this is very good font hierarchy
-
-## Start with what you already have
-- the list text font is too large
-
-## The part we don't talk about
-We have to figure out better way to have these two sentences. they make sense but seem a bit too much on screen
-- Maybe the hardest part isn't building a business.
-- Maybe it's believing you could build one.
-maybe juxtapose them with one black and white card in full-width section so they feel better next to each
-
-## You don't have to do it alone
-this whole text is title font which is too much of large font seems like its screaming at me -> You start with what you have.
-We help you figure out what to do with it.
+- Start here: this is good, No changes at all
+- hurdle is also fine
+- Reveal : This is what needs changes
+    1. We have to acknowledge that user situation is pretty common
+    2. Show then how urge can help them get over the hurdles and blocks they have identified
+    3. Beyond the program how we at urge know what it takes to build a successful business
+        - guidance: through regular events and online standups
+        - accountability and connection 
+        - Internal ecosystem to test, connect, find help and launch (community)
+        - right tools, resources
+        - expertise: industry experts and mentors
+    5. i would also rethink the title right now it says "You probably have more to start than you think" We have already said this before. This title should focus on how urge will help you start
+    4. we have  button here whicb says "See what urge looks like" but we are reveal what urge looks like and how it can help then. So i feel we should bring the two choices start or try right here instead of having one extra step
