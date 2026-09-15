@@ -1,51 +1,68 @@
-import { createServerClient } from '@supabase/ssr';
-import {
-  type NextRequest,
-  NextResponse,
-} from 'next/server';
+import 'server-only';
 
-export async function updateSession(
-  request: NextRequest,
-) {
-  let supabaseResponse = NextResponse.next({
-    request,
+import { cookies } from 'next/headers';
+
+import type { Database } from '@/types/supabase';
+import { createClient } from '@/utils/supabase/server';
+
+type UserProfileInsert =
+  Database['public']['Tables']['user_profile']['Insert'];
+
+export interface RegisterInput {
+  email: string;
+  password: string;
+  username: string;
+  ageGroup?: string | null;
+  gender?: string | null;
+  city?: string | null;
+  country?: string | null;
+}
+
+export async function registerUser(input: RegisterInput) {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const {
+    data: authData,
+    error: authError,
+  } = await supabase.auth.signUp({
+    email: input.email,
+    password: input.password,
   });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
+  if (authError) {
+    throw new Error(authError.message);
+  }
 
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(
-            ({ name, value }) => {
-              request.cookies.set(name, value);
-            },
-          );
+  if (!authData.user) {
+    throw new Error(
+      'Registration succeeded but no user was returned.',
+    );
+  }
 
-          supabaseResponse = NextResponse.next({
-            request,
-          });
+  const profile: UserProfileInsert = {
+    user_id: authData.user.id,
+    username: input.username,
+    age_group: input.ageGroup ?? null,
+    gender: input.gender ?? null,
+    city: input.city ?? null,
+    country: input.country ?? null,
+  };
 
-          cookiesToSet.forEach(
-            ({ name, value, options }) => {
-              supabaseResponse.cookies.set(
-                name,
-                value,
-                options,
-              );
-            },
-          );
-        },
-      },
-    },
-  );
+  const {
+    error: profileError,
+  } = await supabase
+    .from('user_profile')
+    .insert(profile);
 
-  await supabase.auth.getClaims();
+  if (profileError) {
+    throw new Error(
+      `Account created but profile creation failed: ${profileError.message}`,
+    );
+  }
 
-  return supabaseResponse;
+  return {
+    user: authData.user,
+    session: authData.session,
+  };
 }
