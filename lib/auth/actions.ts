@@ -5,17 +5,7 @@ import {
   type RegistrationIntent,
 } from './register';
 
-interface RegisterState {
-  error: string | null;
-  success: boolean;
-  requiresConfirmation: boolean;
-}
-
-export const initialRegisterState: RegisterState = {
-  error: null,
-  success: false,
-  requiresConfirmation: false,
-};
+import type { RegisterState } from './types';
 
 export async function registerAction(
   _prevState: RegisterState,
@@ -48,8 +38,7 @@ export async function registerAction(
 
   if (password.length < 8) {
     return {
-      error:
-        'Password must be at least 8 characters.',
+      error: 'Password must be at least 8 characters.',
       success: false,
       requiresConfirmation: false,
     };
@@ -68,10 +57,7 @@ export async function registerAction(
       requiresConfirmation: !result.session,
     };
   } catch (error) {
-    console.error(
-      'Registration failed:',
-      error,
-    );
+    console.error('Registration failed:', error);
 
     return {
       error:

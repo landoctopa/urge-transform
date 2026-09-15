@@ -1,38 +1,20 @@
 'use client';
 
-import {
-  useActionState,
-} from 'react';
-
+import { useActionState, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-
-import {
-  initialRegisterState,
-  registerAction,
-} from '@/lib/auth/actions';
-
+import { registerAction } from '@/lib/auth/actions';
+import { initialRegisterState } from '@/lib/auth/types';
+import { Eye, EyeOff } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 export function RegisterForm() {
   const searchParams = useSearchParams();
+  const [showPassword, setShowPassword] = useState(false);
+  const rawIntent = searchParams.get('intent');
+  const intent: 'join' | 'trial' = rawIntent === 'join' ? 'join' : 'trial';
 
-  const rawIntent =
-    searchParams.get('intent');
-
-  const intent: 'join' | 'trial' =
-    rawIntent === 'join'
-      ? 'join'
-      : 'trial';
-
-  const [
-    state,
-    formAction,
-    isPending,
-  ] = useActionState(
-    registerAction,
-    initialRegisterState,
-  );
+  const [state, formAction, isPending,] = useActionState(registerAction, initialRegisterState,);
 
   if (
     state.success &&
@@ -140,30 +122,45 @@ export function RegisterForm() {
           />
         </div>
 
-        <div>
-          <label
-            htmlFor="password"
-            className="mb-3 block text-sm font-medium"
-          >
-            Password
-          </label>
-
+        <div className="relative">
           <Input
             id="password"
             name="password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             required
             minLength={8}
             autoComplete="new-password"
             placeholder="At least 8 characters"
             disabled={isPending}
-            className="h-14 sm:h-16"
+            className="h-14 pr-14 sm:h-16"
           />
 
+          <button
+            type="button"
+            onClick={() =>
+              setShowPassword((visible) => !visible)
+            }
+            disabled={isPending}
+            aria-label={
+              showPassword
+                ? 'Hide password'
+                : 'Show password'
+            }
+            className="absolute inset-y-0 right-0 flex w-14 items-center justify-center text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {showPassword ? (
+              <EyeOff className="h-5 w-5" />
+            ) : (
+              <Eye className="h-5 w-5" />
+            )}
+          </button>
           <p className="mt-2 text-xs text-muted-foreground">
             At least 8 characters.
           </p>
         </div>
+
+
+
 
         {state.error && (
           <p

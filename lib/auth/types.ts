@@ -9,3 +9,15 @@ export interface CurrentUser {
   auth: User;
   profile: UserProfile | null;
 }
+
+export interface RegisterState {
+  error: string | null;
+  success: boolean;
+  requiresConfirmation: boolean;
+}
+
+export const initialRegisterState: RegisterState = {
+  error: null,
+  success: false,
+  requiresConfirmation: false,
+};

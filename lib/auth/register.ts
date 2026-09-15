@@ -33,15 +33,11 @@ export async function registerUser(input: RegisterInput) {
   const nextPath =
     `/profile/complete?intent=${input.intent}`;
 
-  const emailRedirectTo =
-    `${getSiteUrl()}/auth/confirm?next=${encodeURIComponent(
-      nextPath,
-    )}`;
+  const emailRedirectTo = `${getSiteUrl()}/api/auth/confirm?next=${encodeURIComponent(
+    nextPath,
+  )}`;
 
-  const {
-    data: authData,
-    error: authError,
-  } = await supabase.auth.signUp({
+  const { data: authData, error: authError } = await supabase.auth.signUp({
     email: input.email.trim(),
     password: input.password,
     options: {
