@@ -404,6 +404,7 @@ export type Database = {
           constraints: Json
           country: string | null
           created_at: string
+          currency: string | null
           desired_future: Json
           experience: Json
           fears: Json
@@ -428,6 +429,7 @@ export type Database = {
           constraints?: Json
           country?: string | null
           created_at?: string
+          currency?: string | null
           desired_future?: Json
           experience?: Json
           fears?: Json
@@ -452,6 +454,7 @@ export type Database = {
           constraints?: Json
           country?: string | null
           created_at?: string
+          currency?: string | null
           desired_future?: Json
           experience?: Json
           fears?: Json

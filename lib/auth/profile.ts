@@ -8,11 +8,9 @@ import type { UserProfile } from './types';
 import { createClient } from '@/utils/supabase/server';
 import { requireCurrentUser } from './currentUser';
 
-type UserProfileInsert =
-  Database['public']['Tables']['user_profile']['Insert'];
+type UserProfileInsert = Database['public']['Tables']['user_profile']['Insert'];
 
-type UserProfileUpdate =
-  Database['public']['Tables']['user_profile']['Update'];
+type UserProfileUpdate = Database['public']['Tables']['user_profile']['Update'];
 
 export async function getCurrentProfile(): Promise<UserProfile | null> {
   const currentUser = await requireCurrentUser();
