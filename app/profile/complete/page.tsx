@@ -1,6 +1,6 @@
-import { redirect } from 'next/navigation';
-
 import { getCurrentProfile } from '@/lib/auth/profile';
+import { requireCurrentUser } from '@/lib/auth/currentUser';
+
 import { ProfileCompletionForm } from '@/components/auth/ProfileCompletionForm';
 
 interface ProfileCompletePageProps {
@@ -12,18 +12,25 @@ interface ProfileCompletePageProps {
 export default async function ProfileCompletePage({
   searchParams,
 }: ProfileCompletePageProps) {
-  const profile = await getCurrentProfile();
+  /*
+   * Authentication is required, but a profile is NOT.
+   *
+   * This is the first place where a newly confirmed user
+   * creates their user_profile row.
+   */
+  await requireCurrentUser();
 
-  if (!profile) {
-    redirect('/register');
-  }
+  const profile =
+    await getCurrentProfile();
 
-  const params = await searchParams;
+  const params =
+    await searchParams;
 
   const intent =
-    params.intent === 'join' || params.intent === 'trial'
+    params.intent === 'join' ||
+    params.intent === 'trial'
       ? params.intent
-      : null;
+      : 'trial';
 
   return (
     <main className="min-h-screen">

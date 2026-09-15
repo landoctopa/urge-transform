@@ -2,38 +2,41 @@ import 'server-only';
 
 import { cookies } from 'next/headers';
 
-import type { Database } from '@/types/supabase';
 import { createClient } from '@/utils/supabase/server';
 
-type UserProfileInsert =
-  Database['public']['Tables']['user_profile']['Insert'];
+export type RegistrationIntent = 'join' | 'trial';
 
 export interface RegisterInput {
   email: string;
   password: string;
-  username: string;
-
-  ageGroup?: string | null;
-  gender?: string | null;
-  city?: string | null;
-  country?: string | null;
+  intent: RegistrationIntent;
 }
 
-const USERNAME_REGEX = /^[A-Za-z0-9_-]{3,30}$/;
+function getSiteUrl() {
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    'http://localhost:3000';
+
+  return siteUrl.replace(/\/$/, '');
+}
 
 export async function registerUser(input: RegisterInput) {
-  const username = input.username.trim();
-
-  if (!USERNAME_REGEX.test(username)) {
-    throw new Error(
-      'Username must be 3–30 characters and use only letters, numbers, underscores, or hyphens.',
-    );
-  }
-
-  const usernameKey = username.toLowerCase();
-
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
+
+  /*
+   * The intent is deliberately transient.
+   *
+   * It is encoded into the confirmation flow so that the user
+   * returns to the same branch they selected in Discovery.
+   */
+  const nextPath =
+    `/profile/complete?intent=${input.intent}`;
+
+  const emailRedirectTo =
+    `${getSiteUrl()}/auth/confirm?next=${encodeURIComponent(
+      nextPath,
+    )}`;
 
   const {
     data: authData,
@@ -41,6 +44,9 @@ export async function registerUser(input: RegisterInput) {
   } = await supabase.auth.signUp({
     email: input.email.trim(),
     password: input.password,
+    options: {
+      emailRedirectTo,
+    },
   });
 
   if (authError) {
@@ -50,32 +56,6 @@ export async function registerUser(input: RegisterInput) {
   if (!authData.user) {
     throw new Error(
       'Registration succeeded but no user was returned.',
-    );
-  }
-
-  const profile: UserProfileInsert = {
-    user_id: authData.user.id,
-
-    username,
-    username_key: usernameKey,
-
-    age_group: input.ageGroup ?? null,
-    gender: input.gender ?? null,
-    city: input.city ?? null,
-    country: input.country ?? null,
-  };
-
-  const { error: profileError } = await supabase
-    .from('user_profile')
-    .insert(profile);
-
-  if (profileError) {
-    if (profileError.code === '23505') {
-      throw new Error('That username is already taken.');
-    }
-
-    throw new Error(
-      `Account created but profile creation failed: ${profileError.message}`,
     );
   }
 

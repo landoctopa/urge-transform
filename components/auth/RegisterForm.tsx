@@ -1,341 +1,189 @@
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import {
+  useActionState,
+} from 'react';
+
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Eye, EyeOff } from 'lucide-react';
 
-import { registerAction } from '@/lib/auth/actions';
+import {
+  initialRegisterState,
+  registerAction,
+} from '@/lib/auth/actions';
 
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-
-type UsernameStatus =
-  | 'idle'
-  | 'invalid'
-  | 'checking'
-  | 'available'
-  | 'taken'
-  | 'error';
-
-const USERNAME_REGEX = /^[A-Za-z0-9_-]{3,30}$/;
-
-const initialState = {
-  error: null,
-  success: false,
-  requiresConfirmation: false,
-};
 
 export function RegisterForm() {
   const searchParams = useSearchParams();
 
-  const rawIntent = searchParams.get('intent');
+  const rawIntent =
+    searchParams.get('intent');
 
   const intent: 'join' | 'trial' =
-    rawIntent === 'join' ? 'join' : 'trial';
+    rawIntent === 'join'
+      ? 'join'
+      : 'trial';
 
-  const [username, setUsername] = useState('');
-  const [usernameStatus, setUsernameStatus] =
-    useState<UsernameStatus>('idle');
-
-  const [showPassword, setShowPassword] = useState(false);
-
-  const [state, formAction, isPending] = useActionState(
+  const [
+    state,
+    formAction,
+    isPending,
+  ] = useActionState(
     registerAction,
-    initialState,
+    initialRegisterState,
   );
 
-  async function checkUsername(value: string) {
-    const username = value.trim();
+  if (
+    state.success &&
+    state.requiresConfirmation
+  ) {
+    return (
+      <div className="mx-auto w-full max-w-2xl">
+        <div className="space-y-6">
+          <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-primary">
+            Almost there
+          </p>
 
-    if (!username) {
-      setUsernameStatus('idle');
-      return;
-    }
+          <h1 className="text-4xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-5xl">
+            Check your email.
+          </h1>
 
-    if (!USERNAME_REGEX.test(username)) {
-      setUsernameStatus('invalid');
-      return;
-    }
+          <p className="max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
+            We&apos;ve sent you a confirmation link.
+            Confirm your email and we&apos;ll bring you
+            straight back to Urge to finish setting up
+            your profile.
+          </p>
 
-    setUsernameStatus('checking');
-
-    try {
-      const response = await fetch(
-        `/api/auth/username?username=${encodeURIComponent(username)}`,
-      );
-
-      if (!response.ok) {
-        setUsernameStatus('error');
-        return;
-      }
-
-      const result = await response.json();
-
-      if (!result.valid) {
-        setUsernameStatus('invalid');
-        return;
-      }
-
-      setUsernameStatus(
-        result.available ? 'available' : 'taken',
-      );
-    } catch {
-      setUsernameStatus('error');
-    }
-  }
-
-  useEffect(() => {
-    const value = username.trim();
-
-    if (!value || !USERNAME_REGEX.test(value)) {
-      return;
-    }
-
-    const timeout = window.setTimeout(() => {
-      void checkUsername(value);
-    }, 600);
-
-    return () => {
-      window.clearTimeout(timeout);
-    };
-  }, [username]);
-
-  /*
-   * Email confirmation state
-   */
-  if (state.success) {
-    if (state.requiresConfirmation) {
-      return (
-        <div className="space-y-10">
-          <div className="space-y-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">
-              Almost there
-            </p>
-
-            <h1 className="text-4xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-5xl lg:text-6xl">
-              Check your email.
-            </h1>
-
-            <p className="max-w-xl text-lg leading-8 text-muted-foreground sm:text-xl">
-              We sent you a confirmation link. Confirm your
-              email and you’ll be able to continue with Urge.
+          <div className="border-t border-border pt-8">
+            <p className="text-sm leading-6 text-muted-foreground">
+              Your chosen path will be preserved, so you
+              won&apos;t have to start over.
             </p>
           </div>
 
           <Link
             href={`/login?intent=${intent}`}
-            className="text-base font-medium underline underline-offset-4 transition-opacity hover:opacity-70"
+            className="inline-flex text-sm font-medium underline underline-offset-4"
           >
             Already confirmed? Sign in
           </Link>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-10">
-        <div className="space-y-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">
-            You’re in
-          </p>
-
-          <h1 className="text-4xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-5xl lg:text-6xl">
-            Let’s begin.
-          </h1>
-
-          <p className="text-lg leading-8 text-muted-foreground sm:text-xl">
-            Your account is ready.
-          </p>
         </div>
       </div>
     );
   }
 
+  if (state.success) {
+    return (
+      <div className="mx-auto w-full max-w-2xl">
+        <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-primary">
+          You&apos;re in
+        </p>
+
+        <h1 className="mt-5 text-4xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-5xl">
+          Let&apos;s begin.
+        </h1>
+
+        <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
+          Your account is ready. Let&apos;s finish setting
+          up your Urge profile.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <form
-      action={formAction}
-      className="space-y-8"
-    >
-      <input
-        type="hidden"
-        name="intent"
-        value={intent}
-      />
+    <div className="mx-auto w-full max-w-2xl">
+      <div className="mb-10">
+        <p className="mb-5 text-[11px] font-medium uppercase tracking-[0.28em] text-primary">
+          Create your account
+        </p>
 
-      {/* Username */}
-      <div className="space-y-3">
-        <label
-          htmlFor="username"
-          className="text-sm font-medium sm:text-base"
-        >
-          Username
-        </label>
+        <h1 className="text-4xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-5xl lg:text-6xl">
+          Let&apos;s get you started.
+        </h1>
 
-        <Input
-          id="username"
-          name="username"
-          type="text"
-          autoComplete="username"
-          placeholder="Choose a username"
-          value={username}
-          onChange={(event) => {
-            setUsername(event.target.value);
+        <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
+          Create your account first. We&apos;ll set up the
+          rest of your Urge profile next.
+        </p>
+      </div>
 
-            if (
-              event.target.value.trim() &&
-              !USERNAME_REGEX.test(
-                event.target.value.trim(),
-              )
-            ) {
-              setUsernameStatus('invalid');
-            } else {
-              setUsernameStatus('idle');
-            }
-          }}
-          onBlur={() => {
-            void checkUsername(username);
-          }}
-          required
-          minLength={3}
-          maxLength={30}
-          disabled={isPending}
-          className="h-14 text-base sm:h-16 sm:text-lg"
+      <form
+        action={formAction}
+        className="space-y-8"
+      >
+        <input
+          type="hidden"
+          name="intent"
+          value={intent}
         />
 
-        <div className="min-h-6 text-sm">
-          {usernameStatus === 'invalid' && (
-            <p className="text-muted-foreground">
-              3–30 characters: letters, numbers, underscores,
-              or hyphens.
-            </p>
-          )}
+        <div>
+          <label
+            htmlFor="email"
+            className="mb-3 block text-sm font-medium"
+          >
+            Email
+          </label>
 
-          {usernameStatus === 'checking' && (
-            <p className="text-muted-foreground">
-              Checking availability…
-            </p>
-          )}
-
-          {usernameStatus === 'available' && (
-            <p className="text-primary">
-              Username available.
-            </p>
-          )}
-
-          {usernameStatus === 'taken' && (
-            <p className="text-destructive">
-              That username is already taken.
-            </p>
-          )}
-
-          {usernameStatus === 'error' && (
-            <p className="text-muted-foreground">
-              We couldn't check availability right now.
-            </p>
-          )}
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            required
+            autoComplete="email"
+            placeholder="you@example.com"
+            disabled={isPending}
+            className="h-14 sm:h-16"
+          />
         </div>
-      </div>
 
-      {/* Email */}
-      <div className="space-y-3">
-        <label
-          htmlFor="email"
-          className="text-sm font-medium sm:text-base"
-        >
-          Email
-        </label>
+        <div>
+          <label
+            htmlFor="password"
+            className="mb-3 block text-sm font-medium"
+          >
+            Password
+          </label>
 
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          placeholder="you@example.com"
-          required
-          disabled={isPending}
-          className="h-14 text-base sm:h-16 sm:text-lg"
-        />
-      </div>
-
-      {/* Password */}
-      <div className="space-y-3">
-        <label
-          htmlFor="password"
-          className="text-sm font-medium sm:text-base"
-        >
-          Password
-        </label>
-
-        <div className="relative">
           <Input
             id="password"
             name="password"
-            type={showPassword ? 'text' : 'password'}
+            type="password"
+            required
+            minLength={8}
             autoComplete="new-password"
             placeholder="At least 8 characters"
-            minLength={8}
-            required
             disabled={isPending}
-            className="h-14 pr-12 text-base sm:h-16 sm:pr-14 sm:text-lg"
+            className="h-14 sm:h-16"
           />
 
-          <button
-            type="button"
-            onClick={() =>
-              setShowPassword((current) => !current)
-            }
-            className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-muted-foreground transition-colors hover:text-foreground sm:w-14"
-            aria-label={
-              showPassword
-                ? 'Hide password'
-                : 'Show password'
-            }
-          >
-            {showPassword ? (
-              <EyeOff className="h-5 w-5" />
-            ) : (
-              <Eye className="h-5 w-5" />
-            )}
-          </button>
+          <p className="mt-2 text-xs text-muted-foreground">
+            At least 8 characters.
+          </p>
         </div>
 
-        <p className="text-sm leading-6 text-muted-foreground">
-          At least 8 characters.
-        </p>
-      </div>
+        {state.error && (
+          <p
+            role="alert"
+            className="text-sm font-medium text-destructive"
+          >
+            {state.error}
+          </p>
+        )}
 
-      {/* Server error */}
-      {state.error && (
-        <p
-          role="alert"
-          className="text-base leading-7 text-destructive"
+        <button
+          type="submit"
+          disabled={isPending}
+          className="h-14 w-full rounded-md bg-primary px-6 text-base font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 sm:h-16"
         >
-          {state.error}
-        </p>
-      )}
-
-      {/* Submit */}
-      <Button
-        type="submit"
-        className="h-14 w-full text-base font-medium sm:h-16 sm:text-lg"
-        disabled={isPending}
-      >
-        {isPending
-          ? 'Creating your account…'
-          : 'Create account'}
-      </Button>
-
-      {/* Login */}
-      <p className="text-center text-base leading-7 text-muted-foreground">
-        Already have an account?{' '}
-        <Link
-          href={`/login?intent=${intent}`}
-          className="font-medium text-foreground underline underline-offset-4 transition-opacity hover:opacity-70"
-        >
-          Sign in
-        </Link>
-      </p>
-    </form>
+          {isPending
+            ? 'Creating your account…'
+            : 'Create account'}
+        </button>
+      </form>
+    </div>
   );
 }
