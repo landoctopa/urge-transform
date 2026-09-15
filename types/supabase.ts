@@ -410,6 +410,7 @@ export type Database = {
           gender: string | null
           id: string
           metadata: Json
+          mobile_number: string | null
           motivations: Json
           network_context: Json
           perceived_barriers: Json
@@ -433,6 +434,7 @@ export type Database = {
           gender?: string | null
           id?: string
           metadata?: Json
+          mobile_number?: string | null
           motivations?: Json
           network_context?: Json
           perceived_barriers?: Json
@@ -456,6 +458,7 @@ export type Database = {
           gender?: string | null
           id?: string
           metadata?: Json
+          mobile_number?: string | null
           motivations?: Json
           network_context?: Json
           perceived_barriers?: Json
