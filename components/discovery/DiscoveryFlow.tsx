@@ -9,6 +9,8 @@ import {
   useState,
 } from 'react';
 
+import { useRouter } from 'next/navigation';
+
 import {
   DISCOVERY_HURDLES,
   DISCOVERY_SITUATIONS,
@@ -43,16 +45,10 @@ const STEPS: DiscoveryStep[] = [
 ];
 
 export function DiscoveryFlow() {
-  const [state, setState] =
-    useState<DiscoveryState | null>(null);
-
-  const [step, setStep] =
-    useState<DiscoveryStep>(
-      'situation',
-    );
-
-  const [ready, setReady] =
-    useState(false);
+  const router = useRouter();
+  const [state, setState] = useState<DiscoveryState | null>(null);
+  const [step, setStep] = useState<DiscoveryStep>('situation');
+  const [ready, setReady] = useState(false);
 
   /*
    * Restore anonymous Discovery state.
@@ -67,22 +63,15 @@ export function DiscoveryFlow() {
     if (stored) {
       setState(stored);
 
-      if (
-        stored.situation &&
-        stored.hurdle
-      ) {
+      if (stored.situation && stored.hurdle) {
         setStep('reveal');
-      } else if (
-        stored.situation
-      ) {
+      } else if (stored.situation) {
         setStep('hurdle');
       } else {
         setStep('situation');
       }
     } else {
-      setState(
-        createDiscoveryState(),
-      );
+      setState( createDiscoveryState());
     }
 
     setReady(true);
@@ -113,11 +102,11 @@ export function DiscoveryFlow() {
 
   const reveal =
     state?.situation &&
-    state?.hurdle
+      state?.hurdle
       ? getDiscoveryReveal(
-          state.situation,
-          state.hurdle,
-        )
+        state.situation,
+        state.hurdle,
+      )
       : null;
 
   const chooseSituation =
@@ -175,30 +164,17 @@ export function DiscoveryFlow() {
    */
   const handleChoice =
     useCallback(
-      (choice: DiscoveryChoice) => {
-        if (choice === 'join') {
-          /*
-           * TODO:
-           * Navigate to registration with
-           * intent = "join".
-           */
-          console.log(
-            'Discovery choice: join',
-          );
+    (choice: DiscoveryChoice) => {
+      if (choice === 'join') {
+        router.push('/register?intent=join');
+        return;
+      }
 
-          return;
-        }
-
-        /*
-         * TODO:
-         * Navigate to registration with
-         * intent = "try_first".
-         */
-        console.log(
-          'Discovery choice: try_first',
-        );
-      },
-      [],
+      if (choice === 'try_first') {
+        router.push('/register?intent=trial');
+      }
+    },
+    [router],
     );
 
   if (!ready || !state) {

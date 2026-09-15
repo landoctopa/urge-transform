@@ -2,45 +2,40 @@
 
 import { registerUser } from './register';
 
-export type RegisterActionState = {
-  error: string | null;
-  success: boolean;
-  requiresConfirmation: boolean;
-};
-
-export const initialRegisterState: RegisterActionState = {
-  error: null,
-  success: false,
-  requiresConfirmation: false,
-};
-
 export async function registerAction(
-  _prevState: RegisterActionState,
+  _prevState: {
+    error: string | null;
+    success: boolean;
+    requiresConfirmation: boolean;
+  },
   formData: FormData,
-): Promise<RegisterActionState> {
+) {
   const username = String(formData.get('username') ?? '').trim();
   const email = String(formData.get('email') ?? '').trim();
   const password = String(formData.get('password') ?? '');
 
   if (!username || !email || !password) {
     return {
-      ...initialRegisterState,
       error: 'Please complete all fields.',
+      success: false,
+      requiresConfirmation: false,
     };
   }
 
   if (!/^[A-Za-z0-9_-]{3,30}$/.test(username)) {
     return {
-      ...initialRegisterState,
       error:
         'Username must be 3–30 characters and use only letters, numbers, underscores, or hyphens.',
+      success: false,
+      requiresConfirmation: false,
     };
   }
 
   if (password.length < 8) {
     return {
-      ...initialRegisterState,
       error: 'Password must be at least 8 characters.',
+      success: false,
+      requiresConfirmation: false,
     };
   }
 
@@ -58,11 +53,12 @@ export async function registerAction(
     };
   } catch (error) {
     return {
-      ...initialRegisterState,
       error:
         error instanceof Error
           ? error.message
           : 'Something went wrong while creating your account.',
+      success: false,
+      requiresConfirmation: false,
     };
   }
 }

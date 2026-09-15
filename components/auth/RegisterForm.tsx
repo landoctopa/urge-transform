@@ -3,11 +3,9 @@
 import { useActionState, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { Eye, EyeOff } from 'lucide-react';
 
-import {
-  initialRegisterState,
-  registerAction,
-} from '@/lib/auth/actions';
+import { registerAction } from '@/lib/auth/actions';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,21 +20,29 @@ type UsernameStatus =
 
 const USERNAME_REGEX = /^[A-Za-z0-9_-]{3,30}$/;
 
+const initialState = {
+  error: null,
+  success: false,
+  requiresConfirmation: false,
+};
+
 export function RegisterForm() {
   const searchParams = useSearchParams();
 
-  const intent =
-    searchParams.get('intent') === 'join'
-      ? 'join'
-      : 'trial';
+  const rawIntent = searchParams.get('intent');
+
+  const intent: 'join' | 'trial' =
+    rawIntent === 'join' ? 'join' : 'trial';
 
   const [username, setUsername] = useState('');
   const [usernameStatus, setUsernameStatus] =
     useState<UsernameStatus>('idle');
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const [state, formAction, isPending] = useActionState(
     registerAction,
-    initialRegisterState,
+    initialState,
   );
 
   async function checkUsername(value: string) {
@@ -95,20 +101,23 @@ export function RegisterForm() {
     };
   }, [username]);
 
+  /*
+   * Email confirmation state
+   */
   if (state.success) {
     if (state.requiresConfirmation) {
       return (
-        <div className="space-y-8">
-          <div className="space-y-3">
+        <div className="space-y-10">
+          <div className="space-y-5">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">
               Almost there
             </p>
 
-            <h1 className="text-3xl font-medium tracking-[-0.04em] sm:text-4xl">
+            <h1 className="text-4xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-5xl lg:text-6xl">
               Check your email.
             </h1>
 
-            <p className="max-w-md text-base leading-7 text-muted-foreground">
+            <p className="max-w-xl text-lg leading-8 text-muted-foreground sm:text-xl">
               We sent you a confirmation link. Confirm your
               email and you’ll be able to continue with Urge.
             </p>
@@ -116,7 +125,7 @@ export function RegisterForm() {
 
           <Link
             href={`/login?intent=${intent}`}
-            className="text-sm font-medium underline underline-offset-4"
+            className="text-base font-medium underline underline-offset-4 transition-opacity hover:opacity-70"
           >
             Already confirmed? Sign in
           </Link>
@@ -125,17 +134,17 @@ export function RegisterForm() {
     }
 
     return (
-      <div className="space-y-8">
-        <div className="space-y-3">
+      <div className="space-y-10">
+        <div className="space-y-5">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">
             You’re in
           </p>
 
-          <h1 className="text-3xl font-medium tracking-[-0.04em] sm:text-4xl">
+          <h1 className="text-4xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-5xl lg:text-6xl">
             Let’s begin.
           </h1>
 
-          <p className="text-base leading-7 text-muted-foreground">
+          <p className="text-lg leading-8 text-muted-foreground sm:text-xl">
             Your account is ready.
           </p>
         </div>
@@ -144,17 +153,21 @@ export function RegisterForm() {
   }
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form
+      action={formAction}
+      className="space-y-8"
+    >
       <input
         type="hidden"
         name="intent"
         value={intent}
       />
 
-      <div className="space-y-2">
+      {/* Username */}
+      <div className="space-y-3">
         <label
           htmlFor="username"
-          className="text-sm font-medium"
+          className="text-sm font-medium sm:text-base"
         >
           Username
         </label>
@@ -171,7 +184,9 @@ export function RegisterForm() {
 
             if (
               event.target.value.trim() &&
-              !USERNAME_REGEX.test(event.target.value.trim())
+              !USERNAME_REGEX.test(
+                event.target.value.trim(),
+              )
             ) {
               setUsernameStatus('invalid');
             } else {
@@ -185,9 +200,10 @@ export function RegisterForm() {
           minLength={3}
           maxLength={30}
           disabled={isPending}
+          className="h-14 text-base sm:h-16 sm:text-lg"
         />
 
-        <div className="min-h-5 text-xs">
+        <div className="min-h-6 text-sm">
           {usernameStatus === 'invalid' && (
             <p className="text-muted-foreground">
               3–30 characters: letters, numbers, underscores,
@@ -221,10 +237,11 @@ export function RegisterForm() {
         </div>
       </div>
 
-      <div className="space-y-2">
+      {/* Email */}
+      <div className="space-y-3">
         <label
           htmlFor="email"
-          className="text-sm font-medium"
+          className="text-sm font-medium sm:text-base"
         >
           Email
         </label>
@@ -237,41 +254,71 @@ export function RegisterForm() {
           placeholder="you@example.com"
           required
           disabled={isPending}
+          className="h-14 text-base sm:h-16 sm:text-lg"
         />
       </div>
 
-      <div className="space-y-2">
+      {/* Password */}
+      <div className="space-y-3">
         <label
           htmlFor="password"
-          className="text-sm font-medium"
+          className="text-sm font-medium sm:text-base"
         >
           Password
         </label>
 
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          placeholder="At least 8 characters"
-          minLength={8}
-          required
-          disabled={isPending}
-        />
+        <div className="relative">
+          <Input
+            id="password"
+            name="password"
+            type={showPassword ? 'text' : 'password'}
+            autoComplete="new-password"
+            placeholder="At least 8 characters"
+            minLength={8}
+            required
+            disabled={isPending}
+            className="h-14 pr-12 text-base sm:h-16 sm:pr-14 sm:text-lg"
+          />
+
+          <button
+            type="button"
+            onClick={() =>
+              setShowPassword((current) => !current)
+            }
+            className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-muted-foreground transition-colors hover:text-foreground sm:w-14"
+            aria-label={
+              showPassword
+                ? 'Hide password'
+                : 'Show password'
+            }
+          >
+            {showPassword ? (
+              <EyeOff className="h-5 w-5" />
+            ) : (
+              <Eye className="h-5 w-5" />
+            )}
+          </button>
+        </div>
+
+        <p className="text-sm leading-6 text-muted-foreground">
+          At least 8 characters.
+        </p>
       </div>
 
+      {/* Server error */}
       {state.error && (
         <p
           role="alert"
-          className="text-sm text-destructive"
+          className="text-base leading-7 text-destructive"
         >
           {state.error}
         </p>
       )}
 
+      {/* Submit */}
       <Button
         type="submit"
-        className="h-12 w-full text-sm font-medium"
+        className="h-14 w-full text-base font-medium sm:h-16 sm:text-lg"
         disabled={isPending}
       >
         {isPending
@@ -279,11 +326,12 @@ export function RegisterForm() {
           : 'Create account'}
       </Button>
 
-      <p className="text-center text-sm text-muted-foreground">
+      {/* Login */}
+      <p className="text-center text-base leading-7 text-muted-foreground">
         Already have an account?{' '}
         <Link
           href={`/login?intent=${intent}`}
-          className="font-medium text-foreground underline underline-offset-4"
+          className="font-medium text-foreground underline underline-offset-4 transition-opacity hover:opacity-70"
         >
           Sign in
         </Link>
