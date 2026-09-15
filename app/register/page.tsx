@@ -54,7 +54,8 @@ export default function RegisterPage() {
               </h1>
 
               <p className="text-sm leading-6 text-muted-foreground">
-                A few details. Then we get to the part that matters.
+                A few details. Then we get to the part that
+                matters.
               </p>
             </div>
 

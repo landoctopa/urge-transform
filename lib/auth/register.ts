@@ -70,10 +70,7 @@ export async function registerUser(input: RegisterInput) {
     .insert(profile);
 
   if (profileError) {
-    if (
-      profileError.code === '23505' &&
-      profileError.constraint === 'user_profile_username_key_unique'
-    ) {
+    if (profileError.code === '23505') {
       throw new Error('That username is already taken.');
     }
 
