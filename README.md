@@ -1,15 +1,30 @@
-Overall flow is great. I just want to enhance the reveal and choice action in the discovery flow. Let me what you think of my suggestions -> 
+# Identity implementation
+I have implemented everything you gave me with few changes, Below is the list of things ib implmented with details
 
-- Start here: this is good, No changes at all
-- hurdle is also fine
-- Reveal : This is what needs changes
-    1. We have to acknowledge that user situation is pretty common
-    2. Show then how urge can help them get over the hurdles and blocks they have identified
-    3. Beyond the program how we at urge know what it takes to build a successful business
-        - guidance: through regular events and online standups
-        - accountability and connection 
-        - Internal ecosystem to test, connect, find help and launch (community)
-        - right tools, resources
-        - expertise: industry experts and mentors
-    5. i would also rethink the title right now it says "You probably have more to start than you think" We have already said this before. This title should focus on how urge will help you start
-    4. we have  button here whicb says "See what urge looks like" but we are reveal what urge looks like and how it can help then. So i feel we should bring the two choices start or try right here instead of having one extra step
+1. Ran migration for user_profile table 
+2. Synced supabase types
+3. added lib/auth/types.ts but i have used supabase user_profile type instead of defining it ourselves to make it easier to work with envolving profile schema. i added the file details below.
+4. lib/auth/currentUser.ts - implemented and modified it to use UserProfile types exported from lib/auth/types.ts
+5. lib/auth/index.ts - implemented
+6. lib/auth/profile.ts - implemented and modified it to use UserProfile types exported from lib/auth/types.ts
+7. lib/auth/register.ts - implemented
+8. proxy.ts - implemented uses utils/supabase/proxy.ts
+9. utils/supabase/proxy.ts - i have placed this inside utils folder alongwith other supabase clients
+
+
+```ts
+// lib/auth/types.ts
+import type { User } from '@supabase/supabase-js';
+import type { Json, Database } from '@/types/supabase';
+
+
+export type UserProfile = Database['public']['Tables']['user_profile']['Row'];
+
+
+export interface CurrentUser {
+  auth: User;
+  profile: UserProfile | null;
+}
+```
+
+I can share any file if u want to reference them. If this is fine then we can move to Auth UI (register and login) and commerce

@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -398,12 +398,16 @@ export type Database = {
       }
       user_profile: {
         Row: {
+          age_group: string | null
           capabilities: Json
+          city: string | null
           constraints: Json
+          country: string | null
           created_at: string
           desired_future: Json
           experience: Json
           fears: Json
+          gender: string | null
           id: string
           metadata: Json
           motivations: Json
@@ -413,14 +417,19 @@ export type Database = {
           resources: Json
           updated_at: string
           user_id: string
+          username: string | null
         }
         Insert: {
+          age_group?: string | null
           capabilities?: Json
+          city?: string | null
           constraints?: Json
+          country?: string | null
           created_at?: string
           desired_future?: Json
           experience?: Json
           fears?: Json
+          gender?: string | null
           id?: string
           metadata?: Json
           motivations?: Json
@@ -430,14 +439,19 @@ export type Database = {
           resources?: Json
           updated_at?: string
           user_id: string
+          username?: string | null
         }
         Update: {
+          age_group?: string | null
           capabilities?: Json
+          city?: string | null
           constraints?: Json
+          country?: string | null
           created_at?: string
           desired_future?: Json
           experience?: Json
           fears?: Json
+          gender?: string | null
           id?: string
           metadata?: Json
           motivations?: Json
@@ -447,6 +461,7 @@ export type Database = {
           resources?: Json
           updated_at?: string
           user_id?: string
+          username?: string | null
         }
         Relationships: []
       }
