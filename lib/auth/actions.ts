@@ -29,10 +29,11 @@ export async function registerAction(
     };
   }
 
-  if (username.length < 3) {
+  if (!/^[A-Za-z0-9_-]{3,30}$/.test(username)) {
     return {
       ...initialRegisterState,
-      error: 'Username must be at least 3 characters.',
+      error:
+        'Username must be 3–30 characters and use only letters, numbers, underscores, or hyphens.',
     };
   }
 
