@@ -1,7 +1,6 @@
 import 'server-only';
 
 import { cookies } from 'next/headers';
-
 import { createClient } from '@/utils/supabase/server';
 
 export async function getUrgeMembership() {
@@ -16,9 +15,7 @@ export async function getUrgeMembership() {
     .single();
 
   if (offeringError) {
-    throw new Error(
-      `Failed to load Urge Membership: ${offeringError.message}`,
-    );
+    throw new Error(`Failed to load Urge Membership: ${offeringError.message}` );
   }
 
   const { data: prices, error: pricesError } = await supabase
@@ -36,8 +33,5 @@ export async function getUrgeMembership() {
     );
   }
 
-  return {
-    offering,
-    prices,
-  };
+  return {offering, prices};
 }
