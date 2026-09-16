@@ -74,19 +74,9 @@ export function ProfileCompletionForm({
 }: ProfileCompletionFormProps) {
   const router = useRouter();
 
-  const [
-    state,
-    formAction,
-    isPending,
-  ] = useActionState(
-    completeProfileAction,
-    initialState,
-  );
+  const [state, formAction,isPending] = useActionState(completeProfileAction,initialState);
 
-  const [username, setUsername] =
-    useState(
-      profile?.username ?? '',
-    );
+  const [username, setUsername] = useState(profile?.username ?? '' );
 
   const [
     usernameStatus,
