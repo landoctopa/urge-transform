@@ -73,6 +73,311 @@ export type Database = {
           },
         ]
       }
+      discounts: {
+        Row: {
+          application_type: string
+          code: string | null
+          created_at: string
+          discount_type: string
+          ends_at: string | null
+          id: string
+          metadata: Json
+          name: string
+          offering_id: string
+          starts_at: string | null
+          status: string
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          application_type: string
+          code?: string | null
+          created_at?: string
+          discount_type: string
+          ends_at?: string | null
+          id?: string
+          metadata?: Json
+          name: string
+          offering_id: string
+          starts_at?: string | null
+          status?: string
+          updated_at?: string
+          value: number
+        }
+        Update: {
+          application_type?: string
+          code?: string | null
+          created_at?: string
+          discount_type?: string
+          ends_at?: string | null
+          id?: string
+          metadata?: Json
+          name?: string
+          offering_id?: string
+          starts_at?: string | null
+          status?: string
+          updated_at?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discounts_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entitlements: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          metadata: Json
+          scope: string | null
+          source_id: string | null
+          source_type: string
+          starts_at: string
+          status: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json
+          scope?: string | null
+          source_id?: string | null
+          source_type: string
+          starts_at?: string
+          status?: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json
+          scope?: string | null
+          source_id?: string | null
+          source_type?: string
+          starts_at?: string
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      offering_prices: {
+        Row: {
+          access_duration_months: number | null
+          billing_interval: string | null
+          billing_interval_count: number | null
+          billing_type: string
+          created_at: string
+          currency: string
+          id: string
+          metadata: Json
+          name: string
+          offering_id: string
+          price: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          access_duration_months?: number | null
+          billing_interval?: string | null
+          billing_interval_count?: number | null
+          billing_type?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json
+          name: string
+          offering_id: string
+          price: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          access_duration_months?: number | null
+          billing_interval?: string | null
+          billing_interval_count?: number | null
+          billing_type?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json
+          name?: string
+          offering_id?: string
+          price?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offering_prices_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offerings: {
+        Row: {
+          availability_status: string
+          available_from: string | null
+          available_until: string | null
+          created_at: string
+          description: string | null
+          id: string
+          metadata: Json
+          name: string
+          slug: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          availability_status?: string
+          available_from?: string | null
+          available_until?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json
+          name: string
+          slug: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          availability_status?: string
+          available_from?: string | null
+          available_until?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json
+          name?: string
+          slug?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      order_items: {
+        Row: {
+          created_at: string
+          discount: number
+          id: string
+          metadata: Json
+          name: string
+          offering_id: string
+          offering_price_id: string | null
+          order_id: string
+          quantity: number
+          total_price: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          discount?: number
+          id?: string
+          metadata?: Json
+          name: string
+          offering_id: string
+          offering_price_id?: string | null
+          order_id: string
+          quantity?: number
+          total_price: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          discount?: number
+          id?: string
+          metadata?: Json
+          name?: string
+          offering_id?: string
+          offering_price_id?: string | null
+          order_id?: string
+          quantity?: number
+          total_price?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_offering_id_fkey"
+            columns: ["offering_id"]
+            isOneToOne: false
+            referencedRelation: "offerings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_offering_price_id_fkey"
+            columns: ["offering_price_id"]
+            isOneToOne: false
+            referencedRelation: "offering_prices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          currency: string
+          discount: number
+          id: string
+          metadata: Json
+          status: string
+          subtotal: number
+          tax: number
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency: string
+          discount?: number
+          id?: string
+          metadata?: Json
+          status?: string
+          subtotal?: number
+          tax?: number
+          total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          discount?: number
+          id?: string
+          metadata?: Json
+          status?: string
+          subtotal?: number
+          tax?: number
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       program_content: {
         Row: {
           ai_context_keys: Json
@@ -153,6 +458,112 @@ export type Database = {
           video_url?: string | null
         }
         Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          metadata: Json
+          offering_price_id: string
+          provider: string
+          provider_subscription_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          metadata?: Json
+          offering_price_id: string
+          provider: string
+          provider_subscription_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          metadata?: Json
+          offering_price_id?: string
+          provider?: string
+          provider_subscription_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_offering_price_id_fkey"
+            columns: ["offering_price_id"]
+            isOneToOne: false
+            referencedRelation: "offering_prices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          metadata: Json
+          order_id: string
+          provider: string
+          provider_transaction_id: string | null
+          status: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency: string
+          id?: string
+          metadata?: Json
+          order_id: string
+          provider: string
+          provider_transaction_id?: string | null
+          status: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json
+          order_id?: string
+          provider?: string
+          provider_transaction_id?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_commitments: {
         Row: {
