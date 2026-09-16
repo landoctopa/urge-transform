@@ -9,31 +9,17 @@ import {
 } from 'react';
 
 import { useRouter } from 'next/navigation';
-
 import type { UserProfile } from '@/lib/auth/types';
-
-import {
-  COUNTRY_OPTIONS,
-  getCountryCurrency,
-} from '@/lib/geography/countries';
-
-import {
-  CURRENCY_OPTIONS,
-} from '@/lib/geography/currencies';
-
-import {
-  completeProfileAction,
-} from '@/lib/auth/profileActions';
+import { COUNTRY_OPTIONS, getCountryCurrency } from '@/lib/geography/countries';
+import { CURRENCY_OPTIONS } from '@/lib/geography/currencies';
+import { completeProfileAction } from '@/lib/auth/profileActions';
 
 interface ProfileCompletionFormProps {
   profile: UserProfile | null;
   intent: 'join' | 'trial';
 }
 
-const initialState = {
-  error: null,
-  success: false,
-};
+const initialState = { error: null, success: false };
 
 const AGE_GROUPS = [
   { value: '18-24', label: '18–24' },
@@ -57,8 +43,7 @@ const GENDER_OPTIONS = [
   },
 ];
 
-const USERNAME_REGEX =
-  /^[A-Za-z0-9_-]{3,30}$/;
+const USERNAME_REGEX = /^[A-Za-z0-9_-]{3,30}$/;
 
 type UsernameStatus =
   | 'idle'
@@ -68,78 +53,32 @@ type UsernameStatus =
   | 'invalid'
   | 'error';
 
-export function ProfileCompletionForm({
-  profile,
-  intent,
-}: ProfileCompletionFormProps) {
+export function ProfileCompletionForm({ profile, intent }: ProfileCompletionFormProps) {
   const router = useRouter();
-
-  const [state, formAction,isPending] = useActionState(completeProfileAction,initialState);
-
-  const [username, setUsername] = useState(profile?.username ?? '' );
-
-  const [
-    usernameStatus,
-    setUsernameStatus,
-  ] =
-    useState<UsernameStatus>(
-      profile?.username
-        ? 'available'
-        : 'idle',
-    );
-
-  const [
-    country,
-    setCountry,
-  ] = useState(
-    profile?.country ?? '',
+  const [state, formAction, isPending] = useActionState(completeProfileAction, initialState);
+  const [username, setUsername] = useState(profile?.username ?? '');
+  const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>(profile?.username
+    ? 'available'
+    : 'idle',
   );
 
-  const initialCurrency =
-    profile?.currency ??
-    getCountryCurrency(
-      profile?.country,
-    ) ??
-    '';
+  const [country, setCountry] = useState(profile?.country ?? '',);
+  const initialCurrency = profile?.currency ?? getCountryCurrency(profile?.country) ?? '';
+  const [currency, setCurrency,] = useState(initialCurrency,);
+  const [currencyTouched, setCurrencyTouched,] = useState(Boolean(profile?.currency),);
+  const usernameRequestRef = useRef(0);
 
-  const [
-    currency,
-    setCurrency,
-  ] = useState(
-    initialCurrency,
-  );
-
-  const [
-    currencyTouched,
-    setCurrencyTouched,
-  ] = useState(
-    Boolean(profile?.currency),
-  );
-
-  const usernameRequestRef =
-    useRef(0);
-
-  const selectedCountryCurrency =
-    useMemo(
-      () =>
-        getCountryCurrency(
-          country,
-        ),
-      [country],
-    );
+  const selectedCountryCurrency = useMemo(() => getCountryCurrency(country), [country]);
 
   useEffect(() => {
-    const value =
-      username.trim();
+    const value = username.trim();
 
     if (!value) {
       setUsernameStatus('idle');
       return;
     }
 
-    if (
-      !USERNAME_REGEX.test(value)
-    ) {
+    if (!USERNAME_REGEX.test(value)) {
       setUsernameStatus('invalid');
       return;
     }
@@ -148,22 +87,14 @@ export function ProfileCompletionForm({
      * Existing username belonging to this profile
      * is automatically valid.
      */
-    if (
-      profile?.username &&
-      value === profile.username
-    ) {
-      setUsernameStatus(
-        'available',
-      );
+    if (profile?.username && value === profile.username) {
+      setUsernameStatus('available');
       return;
     }
 
-    const requestId =
-      ++usernameRequestRef.current;
+    const requestId = ++usernameRequestRef.current;
 
-    setUsernameStatus(
-      'checking',
-    );
+    setUsernameStatus('checking');
 
     const timeout =
       window.setTimeout(
@@ -176,43 +107,25 @@ export function ProfileCompletionForm({
                 )}`,
               );
 
-            if (
-              requestId !==
-              usernameRequestRef.current
-            ) {
+            if (requestId !== usernameRequestRef.current) {
               return;
             }
 
             if (!response.ok) {
-              setUsernameStatus(
-                'error',
-              );
+              setUsernameStatus('error');
               return;
             }
 
-            const result =
-              await response.json();
+            const result = await response.json();
 
-            if (
-              requestId !==
-              usernameRequestRef.current
-            ) {
+            if (requestId !== usernameRequestRef.current) {
               return;
             }
 
-            setUsernameStatus(
-              result.available
-                ? 'available'
-                : 'taken',
-            );
+            setUsernameStatus(result.available ? 'available' : 'taken');
           } catch {
-            if (
-              requestId ===
-              usernameRequestRef.current
-            ) {
-              setUsernameStatus(
-                'error',
-              );
+            if (requestId === usernameRequestRef.current) {
+              setUsernameStatus('error');
             }
           }
         },
@@ -339,41 +252,41 @@ export function ProfileCompletionForm({
           <div className="mt-2 min-h-5 text-xs">
             {usernameStatus ===
               'checking' && (
-              <p className="text-muted-foreground">
-                Checking availability…
-              </p>
-            )}
+                <p className="text-muted-foreground">
+                  Checking availability…
+                </p>
+              )}
 
             {usernameStatus ===
               'available' && (
-              <p className="text-primary">
-                Username is available.
-              </p>
-            )}
+                <p className="text-primary">
+                  Username is available.
+                </p>
+              )}
 
             {usernameStatus ===
               'taken' && (
-              <p className="text-destructive">
-                That username is already taken.
-              </p>
-            )}
+                <p className="text-destructive">
+                  That username is already taken.
+                </p>
+              )}
 
             {usernameStatus ===
               'invalid' && (
-              <p className="text-muted-foreground">
-                3–30 characters. Letters,
-                numbers, underscores and
-                hyphens only.
-              </p>
-            )}
+                <p className="text-muted-foreground">
+                  3–30 characters. Letters,
+                  numbers, underscores and
+                  hyphens only.
+                </p>
+              )}
 
             {usernameStatus ===
               'error' && (
-              <p className="text-destructive">
-                We couldn&apos;t check username
-                availability.
-              </p>
-            )}
+                <p className="text-destructive">
+                  We couldn&apos;t check username
+                  availability.
+                </p>
+              )}
           </div>
         </section>
 
