@@ -9,13 +9,17 @@ interface ProfileCompleteSuccessPageProps {
 export default async function ProfileCompleteSuccessPage({
   searchParams,
 }: ProfileCompleteSuccessPageProps) {
-  const params =
-    await searchParams;
+  const params = await searchParams;
 
   const intent =
     params.intent === 'join'
       ? 'join'
       : 'trial';
+
+  const continueHref =
+    intent === 'join'
+      ? '/checkout?intent=join'
+      : '/program/welcome?intent=trial';
 
   return (
     <main className="min-h-screen">
@@ -36,7 +40,7 @@ export default async function ProfileCompleteSuccessPage({
 
         <div className="mt-10">
           <Link
-            href="/"
+            href={continueHref}
             className="inline-flex h-12 items-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
           >
             Continue
