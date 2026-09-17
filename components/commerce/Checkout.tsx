@@ -2,24 +2,13 @@
 
 import { useMemo, useState } from 'react';
 import { ArrowRight, Check, Loader2, Tag } from 'lucide-react';
-
 import type { Database } from '@/types/supabase';
 
-type Offering =
-  Database['public']['Tables']['offerings']['Row'];
+type Offering = Database['public']['Tables']['offerings']['Row'];
+type OfferingPrice = Database['public']['Tables']['offering_prices']['Row'];
+interface CheckoutProps { offering: Offering; prices: OfferingPrice[]; }
 
-type OfferingPrice =
-  Database['public']['Tables']['offering_prices']['Row'];
-
-interface CheckoutProps {
-  offering: Offering;
-  prices: OfferingPrice[];
-}
-
-function formatCurrency(
-  amount: number,
-  currency: string,
-) {
+function formatCurrency(amount: number, currency: string) {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency,
@@ -69,6 +58,8 @@ export function Checkout({
   );
   const [discountValid, setDiscountValid] = useState(false);
   const [checkingDiscount, setCheckingDiscount] = useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   const selectedPrice = useMemo(
     () =>
@@ -78,14 +69,8 @@ export function Checkout({
     [prices, selectedPriceId],
   );
 
-  const subtotal = selectedPrice
-    ? Number(selectedPrice.price)
-    : 0;
-
-  const discount = discountValid
-    ? subtotal
-    : 0;
-
+  const subtotal = selectedPrice ? Number(selectedPrice.price) : 0;
+  const discount = discountValid ? subtotal : 0;
   const total = Math.max(subtotal - discount, 0);
 
   async function handleApplyDiscount() {
@@ -133,6 +118,54 @@ export function Checkout({
       );
     } finally {
       setCheckingDiscount(false);
+    }
+  }
+
+  async function handleCheckout() {
+    if (!selectedPrice) { return; }
+
+    setCheckingOut(true);
+    setCheckoutError(null);
+
+    try {
+      const response = await fetch('/api/commerce/checkout',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            offeringSlug: offering.slug,
+            priceId: selectedPrice.id,
+            discountCode: discountValid
+              ? discountCode.trim()
+              : undefined,
+          }),
+        },
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        setCheckoutError(
+          result.error ??
+          'Unable to complete checkout.',
+        );
+        return;
+      }
+
+      console.log('Checkout result:', result);
+
+      // Temporary:
+      // We'll replace this with routing once
+      // the complete commerce flow is confirmed.
+      window.location.href = '/program/welcome';
+    } catch (error) {
+      console.error('Checkout request failed:', error);
+
+      setCheckoutError('Unable to complete checkout.');
+    } finally {
+      setCheckingOut(false);
     }
   }
 
@@ -318,9 +351,9 @@ export function Checkout({
               <span>
                 {selectedPrice
                   ? formatCurrency(
-                      subtotal,
-                      selectedPrice.currency,
-                    )
+                    subtotal,
+                    selectedPrice.currency,
+                  )
                   : '—'}
               </span>
             </div>
@@ -332,9 +365,9 @@ export function Checkout({
                   −
                   {selectedPrice
                     ? formatCurrency(
-                        discount,
-                        selectedPrice.currency,
-                      )
+                      discount,
+                      selectedPrice.currency,
+                    )
                     : '—'}
                 </span>
               </div>
@@ -349,9 +382,9 @@ export function Checkout({
                 <span className="text-2xl font-semibold tracking-[-0.03em]">
                   {selectedPrice
                     ? formatCurrency(
-                        total,
-                        selectedPrice.currency,
-                      )
+                      total,
+                      selectedPrice.currency,
+                    )
                     : '—'}
                 </span>
               </div>
@@ -360,16 +393,32 @@ export function Checkout({
 
           <button
             type="button"
-            disabled={!selectedPrice}
+            onClick={handleCheckout}
+            disabled={!selectedPrice || checkingOut}
             className="mt-8 flex w-full items-center justify-between bg-primary px-5 py-4 text-sm font-medium text-primary-foreground transition-all hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <span>
-              {total === 0
-                ? 'Continue'
-                : 'Continue to payment'}
-            </span>
-
-            <ArrowRight className="h-4 w-4" />
+            {checkingOut ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : total === 0 ? (
+              <>
+                Continue
+                <ArrowRight className="h-4 w-4" />
+              </>
+            ) : (
+              <>
+                Continue to payment
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+            
+            {checkoutError && (
+              <p className="mt-4 text-sm text-destructive">
+                {checkoutError}
+              </p>
+            )}
           </button>
 
           <p className="mt-4 text-center text-xs leading-5 text-muted-foreground">
