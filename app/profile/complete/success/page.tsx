@@ -18,7 +18,7 @@ export default async function ProfileCompleteSuccessPage({
 
   const continueHref =
     intent === 'join'
-      ? '/checkout?intent=join'
+      ? '/checkout?offering=urge-membership'
       : '/program/welcome?intent=trial';
 
   return (

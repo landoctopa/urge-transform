@@ -14,7 +14,6 @@ type OfferingPrice =
 interface CheckoutProps {
   offering: Offering;
   prices: OfferingPrice[];
-  intent: 'join' | 'trial';
 }
 
 function formatCurrency(
