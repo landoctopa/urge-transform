@@ -1,7 +1,6 @@
 import 'server-only';
 
 import { cookies } from 'next/headers';
-
 import { createClient } from '@/utils/supabase/server';
 
 export async function validateDiscountCode(
@@ -24,7 +23,7 @@ export async function validateDiscountCode(
     .select('*')
     .eq('offering_id', offeringId)
     .eq('status', 'active')
-    .ilike('code', normalizedCode)
+    .eq('code', normalizedCode)
     .or(`starts_at.is.null,starts_at.lte.${now}`)
     .or(`ends_at.is.null,ends_at.gt.${now}`)
     .maybeSingle();

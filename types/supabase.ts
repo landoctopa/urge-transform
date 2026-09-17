@@ -1034,6 +1034,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_checkout: {
+        Args: {
+          p_discount_code?: string
+          p_offering_slug: string
+          p_price_id: string
+        }
+        Returns: Json
+      }
       is_username_available: { Args: { candidate: string }; Returns: boolean }
     }
     Enums: {
