@@ -1,14 +1,34 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ArrowRight, Check, Loader2, Tag } from 'lucide-react';
+
+import {
+  ArrowRight,
+  Check,
+  Loader2,
+  Tag,
+} from 'lucide-react';
+
 import type { Database } from '@/types/supabase';
 
-type Offering = Database['public']['Tables']['offerings']['Row'];
-type OfferingPrice = Database['public']['Tables']['offering_prices']['Row'];
-interface CheckoutProps { offering: Offering; prices: OfferingPrice[]; }
+type Offering =
+  Database['public']['Tables']['offerings']['Row'];
 
-function formatCurrency(amount: number, currency: string) {
+type OfferingPrice =
+  Database['public']['Tables']['offering_prices']['Row'];
+
+type Discount =
+  Database['public']['Tables']['discounts']['Row'];
+
+interface CheckoutProps {
+  offering: Offering;
+  prices: OfferingPrice[];
+}
+
+function formatCurrency(
+  amount: number,
+  currency: string,
+) {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency,
@@ -16,7 +36,9 @@ function formatCurrency(amount: number, currency: string) {
   }).format(amount);
 }
 
-function getBillingLabel(price: OfferingPrice) {
+function getBillingLabel(
+  price: OfferingPrice,
+) {
   if (price.billing_interval === 'month') {
     if (price.billing_interval_count === 1) {
       return 'Billed monthly';
@@ -36,45 +58,130 @@ function getBillingLabel(price: OfferingPrice) {
   return 'Recurring';
 }
 
-function getMonthlyEquivalent(price: OfferingPrice) {
+function getMonthlyEquivalent(
+  price: OfferingPrice,
+) {
   if (!price.access_duration_months) {
     return null;
   }
 
-  return Number(price.price) / price.access_duration_months;
+  return (
+    Number(price.price) /
+    price.access_duration_months
+  );
+}
+
+function calculateDiscountAmount(
+  price: OfferingPrice | null,
+  discount: Discount | null,
+) {
+  if (!price || !discount) {
+    return 0;
+  }
+
+  const subtotal = Number(price.price);
+  const value = Number(discount.value);
+
+  let amount = 0;
+
+  if (discount.discount_type === 'percentage') {
+    amount =
+      subtotal *
+      (value / 100);
+  }
+
+  if (discount.discount_type === 'fixed') {
+    amount = value;
+  }
+
+  /*
+   * Keep the client-side display consistent with
+   * the authoritative server-side calculation.
+   *
+   * The server remains the source of truth.
+   */
+  return Math.min(
+    Math.max(amount, 0),
+    subtotal,
+  );
+}
+
+function getDiscountMessage(
+  discount: Discount,
+) {
+  if (
+    discount.discount_type ===
+    'percentage'
+  ) {
+    return `${discount.value}% off`;
+  }
+
+  if (
+    discount.discount_type ===
+    'fixed'
+  ) {
+    return `${formatCurrency(
+      Number(discount.value),
+      'INR',
+    )} off`;
+  }
+
+  return 'Discount applied';
 }
 
 export function Checkout({
   offering,
   prices,
 }: CheckoutProps) {
-  const [selectedPriceId, setSelectedPriceId] = useState(
-    prices[0]?.id ?? '',
-  );
+  const [selectedPriceId, setSelectedPriceId] =
+    useState(
+      prices[0]?.id ?? '',
+    );
 
-  const [discountCode, setDiscountCode] = useState('');
-  const [discountMessage, setDiscountMessage] = useState<string | null>(
-    null,
-  );
-  const [discountValid, setDiscountValid] = useState(false);
-  const [checkingDiscount, setCheckingDiscount] = useState(false);
-  const [checkingOut, setCheckingOut] = useState(false);
-  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [discountCode, setDiscountCode] =
+    useState('');
+
+  const [appliedDiscount, setAppliedDiscount] =
+    useState<Discount | null>(null);
+
+  const [discountMessage, setDiscountMessage] =
+    useState<string | null>(null);
+
+  const [checkingDiscount, setCheckingDiscount] =
+    useState(false);
+
+  const [checkingOut, setCheckingOut] =
+    useState(false);
+
+  const [checkoutError, setCheckoutError] =
+    useState<string | null>(null);
 
   const selectedPrice = useMemo(
     () =>
       prices.find(
-        (price) => price.id === selectedPriceId,
+        (price) =>
+          price.id === selectedPriceId,
       ) ?? null,
     [prices, selectedPriceId],
   );
 
-  const subtotal = selectedPrice ? Number(selectedPrice.price) : 0;
-  const discount = discountValid ? subtotal : 0;
-  const total = Math.max(subtotal - discount, 0);
+  const subtotal = selectedPrice
+    ? Number(selectedPrice.price)
+    : 0;
+
+  const discount = calculateDiscountAmount(
+    selectedPrice,
+    appliedDiscount,
+  );
+
+  const total = Math.max(
+    subtotal - discount,
+    0,
+  );
 
   async function handleApplyDiscount() {
-    const code = discountCode.trim();
+    const code =
+      discountCode.trim();
 
     if (!code || !selectedPrice) {
       return;
@@ -82,35 +189,52 @@ export function Checkout({
 
     setCheckingDiscount(true);
     setDiscountMessage(null);
-    setDiscountValid(false);
+    setAppliedDiscount(null);
 
     try {
-      const response = await fetch(
-        '/api/commerce/discount',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+      const response =
+        await fetch(
+          '/api/commerce/discount',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
+            body: JSON.stringify({
+              offeringId:
+                offering.id,
+              code,
+            }),
           },
-          body: JSON.stringify({
-            offeringId: offering.id,
-            code,
-          }),
-        },
-      );
-
-      const result = await response.json();
-
-      if (!response.ok || !result.valid) {
-        setDiscountMessage(
-          result.error ?? 'Invalid discount code.',
         );
+
+      const result =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !result.valid
+      ) {
+        setDiscountMessage(
+          result.error ??
+            'Invalid discount code.',
+        );
+
         return;
       }
 
-      setDiscountValid(true);
+      const discountData =
+        result.discount as Discount;
+
+      setAppliedDiscount(
+        discountData,
+      );
+
       setDiscountMessage(
-        `${result.discount.name} applied — ${result.discount.value}% off.`,
+        `${discountData.name} applied — ${getDiscountMessage(
+          discountData,
+        )}.`,
       );
     } catch {
       setDiscountMessage(
@@ -122,48 +246,76 @@ export function Checkout({
   }
 
   async function handleCheckout() {
-    if (!selectedPrice) { return; }
+    if (!selectedPrice) {
+      return;
+    }
 
     setCheckingOut(true);
     setCheckoutError(null);
 
     try {
-      const response = await fetch('/api/commerce/checkout',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+      const response =
+        await fetch(
+          '/api/commerce/checkout',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
+            body: JSON.stringify({
+              offeringSlug:
+                offering.slug,
+
+              priceId:
+                selectedPrice.id,
+
+              discountCode:
+                appliedDiscount
+                  ? discountCode.trim()
+                  : undefined,
+            }),
           },
-          body: JSON.stringify({
-            offeringSlug: offering.slug,
-            priceId: selectedPrice.id,
-            discountCode: discountValid
-              ? discountCode.trim()
-              : undefined,
-          }),
-        },
-      );
+        );
 
-      const result = await response.json();
+      const result =
+        await response.json();
 
-      if (!response.ok || !result.success) {
+      if (
+        !response.ok ||
+        !result.success
+      ) {
         setCheckoutError(
           result.error ??
-          'Unable to complete checkout.',
+            'Unable to complete checkout.',
         );
+
         return;
       }
 
-      console.log('Checkout result:', result);
-
-      // Temporary:
-      // We'll replace this with routing once
-      // the complete commerce flow is confirmed.
-      window.location.href = '/program/welcome';
+      /*
+       * For now:
+       *
+       * - Zero-value orders are completed by
+       *   the dummy payment flow.
+       * - Paid orders will eventually hand off
+       *   to Razorpay.
+       *
+       * The API only returns success after the
+       * order/payment/subscription/entitlement
+       * flow has completed.
+       */
+      window.location.href =
+        '/program/welcome';
     } catch (error) {
-      console.error('Checkout request failed:', error);
+      console.error(
+        'Checkout request failed:',
+        error,
+      );
 
-      setCheckoutError('Unable to complete checkout.');
+      setCheckoutError(
+        'Unable to complete checkout.',
+      );
     } finally {
       setCheckingOut(false);
     }
@@ -191,19 +343,35 @@ export function Checkout({
         <div className="grid gap-px border border-border bg-border md:grid-cols-3">
           {prices.map((price) => {
             const selected =
-              price.id === selectedPriceId;
+              price.id ===
+              selectedPriceId;
 
             const monthlyEquivalent =
-              getMonthlyEquivalent(price);
+              getMonthlyEquivalent(
+                price,
+              );
 
             return (
               <button
                 key={price.id}
                 type="button"
                 onClick={() => {
-                  setSelectedPriceId(price.id);
-                  setDiscountValid(false);
-                  setDiscountMessage(null);
+                  setSelectedPriceId(
+                    price.id,
+                  );
+
+                  /*
+                   * A discount has to be
+                   * revalidated against the
+                   * newly selected price.
+                   */
+                  setAppliedDiscount(
+                    null,
+                  );
+
+                  setDiscountMessage(
+                    null,
+                  );
                 }}
                 className={[
                   'relative min-h-[250px] bg-background p-7 text-left transition-all sm:p-8',
@@ -225,18 +393,24 @@ export function Checkout({
                 <div className="mt-8">
                   <span className="text-4xl font-semibold tracking-[-0.04em]">
                     {formatCurrency(
-                      Number(price.price),
+                      Number(
+                        price.price,
+                      ),
                       price.currency,
                     )}
                   </span>
                 </div>
 
                 <p className="mt-3 text-sm text-muted-foreground">
-                  {getBillingLabel(price)}
+                  {getBillingLabel(
+                    price,
+                  )}
                 </p>
 
-                {monthlyEquivalent !== null &&
-                  price.access_duration_months !== 1 && (
+                {monthlyEquivalent !==
+                  null &&
+                  price.access_duration_months !==
+                    1 && (
                     <p className="mt-6 text-sm font-medium text-primary">
                       {formatCurrency(
                         monthlyEquivalent,
@@ -266,9 +440,17 @@ export function Checkout({
               <input
                 value={discountCode}
                 onChange={(event) => {
-                  setDiscountCode(event.target.value);
-                  setDiscountValid(false);
-                  setDiscountMessage(null);
+                  setDiscountCode(
+                    event.target.value,
+                  );
+
+                  setAppliedDiscount(
+                    null,
+                  );
+
+                  setDiscountMessage(
+                    null,
+                  );
                 }}
                 placeholder="Enter a code"
                 className="h-12 w-full border border-input bg-background pl-11 pr-4 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
@@ -277,7 +459,9 @@ export function Checkout({
 
             <button
               type="button"
-              onClick={handleApplyDiscount}
+              onClick={
+                handleApplyDiscount
+              }
               disabled={
                 !discountCode.trim() ||
                 !selectedPrice ||
@@ -297,7 +481,7 @@ export function Checkout({
             <p
               className={[
                 'mt-4 text-sm',
-                discountValid
+                appliedDiscount
                   ? 'text-primary'
                   : 'text-destructive',
               ].join(' ')}
@@ -325,7 +509,10 @@ export function Checkout({
                   className="flex items-start gap-3"
                 >
                   <Check className="mt-1 h-4 w-4 shrink-0 text-primary" />
-                  <span>{item}</span>
+
+                  <span>
+                    {item}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -339,7 +526,8 @@ export function Checkout({
           </p>
 
           <h2 className="mt-5 text-xl font-medium">
-            {selectedPrice?.name ?? 'Membership'}
+            {selectedPrice?.name ??
+              'Membership'}
           </h2>
 
           <div className="mt-8 space-y-4 text-sm">
@@ -351,27 +539,31 @@ export function Checkout({
               <span>
                 {selectedPrice
                   ? formatCurrency(
-                    subtotal,
-                    selectedPrice.currency,
-                  )
+                      subtotal,
+                      selectedPrice.currency,
+                    )
                   : '—'}
               </span>
             </div>
 
-            {discountValid && (
-              <div className="flex justify-between gap-4 text-primary">
-                <span>Discount</span>
-                <span>
-                  −
-                  {selectedPrice
-                    ? formatCurrency(
-                      discount,
-                      selectedPrice.currency,
-                    )
-                    : '—'}
-                </span>
-              </div>
-            )}
+            {appliedDiscount &&
+              discount > 0 && (
+                <div className="flex justify-between gap-4 text-primary">
+                  <span>
+                    Discount
+                  </span>
+
+                  <span>
+                    −
+                    {selectedPrice
+                      ? formatCurrency(
+                          discount,
+                          selectedPrice.currency,
+                        )
+                      : '—'}
+                  </span>
+                </div>
+              )}
 
             <div className="border-t border-border pt-4">
               <div className="flex items-end justify-between gap-4">
@@ -382,9 +574,9 @@ export function Checkout({
                 <span className="text-2xl font-semibold tracking-[-0.03em]">
                   {selectedPrice
                     ? formatCurrency(
-                      total,
-                      selectedPrice.currency,
-                    )
+                        total,
+                        selectedPrice.currency,
+                      )
                     : '—'}
                 </span>
               </div>
@@ -393,8 +585,13 @@ export function Checkout({
 
           <button
             type="button"
-            onClick={handleCheckout}
-            disabled={!selectedPrice || checkingOut}
+            onClick={
+              handleCheckout
+            }
+            disabled={
+              !selectedPrice ||
+              checkingOut
+            }
             className="mt-8 flex w-full items-center justify-between bg-primary px-5 py-4 text-sm font-medium text-primary-foreground transition-all hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {checkingOut ? (
@@ -413,13 +610,13 @@ export function Checkout({
                 <ArrowRight className="h-4 w-4" />
               </>
             )}
-            
-            {checkoutError && (
-              <p className="mt-4 text-sm text-destructive">
-                {checkoutError}
-              </p>
-            )}
           </button>
+
+          {checkoutError && (
+            <p className="mt-4 text-sm text-destructive">
+              {checkoutError}
+            </p>
+          )}
 
           <p className="mt-4 text-center text-xs leading-5 text-muted-foreground">
             Your membership renews automatically according
