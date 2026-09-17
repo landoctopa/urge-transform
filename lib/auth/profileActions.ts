@@ -1,7 +1,13 @@
 'use server';
 
+import type { Database } from '@/types/supabase';
+
 import { getCurrency } from '@/lib/geography/currencies';
 import { getCountry } from '@/lib/geography/countries';
+import {
+  profileSchema,
+  type ProfileFormValues,
+} from '@/lib/validation/profile';
 
 import {
   createCurrentProfile,
@@ -9,134 +15,51 @@ import {
   updateCurrentProfile,
 } from './profile';
 
-const AGE_GROUPS = [
-  '18-24',
-  '25-34',
-  '35-44',
-  '45-54',
-  '55-64',
-  '65+',
-] as const;
-
-const GENDER_OPTIONS = [
-  'female',
-  'male',
-  'non_binary',
-  'prefer_not_to_say',
-] as const;
-
-const USERNAME_REGEX =
-  /^[A-Za-z0-9_-]{3,30}$/;
-
-interface ProfileCompletionState {
+export interface ProfileCompletionState {
   error: string | null;
   success: boolean;
 }
 
+type UserProfileInsert =
+  Database['public']['Tables']['user_profile']['Insert'];
+
+type UserProfileUpdate =
+  Database['public']['Tables']['user_profile']['Update'];
+
 export async function completeProfileAction(
-  _prevState: ProfileCompletionState,
-  formData: FormData,
+  values: ProfileFormValues,
 ): Promise<ProfileCompletionState> {
-  const username = String(
-    formData.get('username') ?? '',
-  ).trim();
+  const parsed =
+    profileSchema.safeParse(values);
 
-  const ageGroup = String(
-    formData.get('ageGroup') ?? '',
-  ).trim();
-
-  const gender = String(
-    formData.get('gender') ?? '',
-  ).trim();
-
-  const country = String(
-    formData.get('country') ?? '',
-  ).trim();
-
-  const city = String(
-    formData.get('city') ?? '',
-  ).trim();
-
-  const mobileNumber = String(
-    formData.get('mobileNumber') ?? '',
-  ).trim();
-
-  const currency = String(
-    formData.get('currency') ?? '',
-  ).trim();
-
-  if (!USERNAME_REGEX.test(username)) {
+  if (!parsed.success) {
     return {
       error:
-        'Username must be 3–30 characters and use only letters, numbers, underscores, or hyphens.',
+        parsed.error.issues[0]?.message ??
+        'Please check your profile details.',
       success: false,
     };
   }
 
-  if (
-    !AGE_GROUPS.includes(
-      ageGroup as (typeof AGE_GROUPS)[number],
-    )
-  ) {
+  const profile = parsed.data;
+
+  /*
+   * These are domain-level checks.
+   * Zod validates the form shape;
+   * these validate against our actual
+   * country and currency data.
+   */
+
+  if (!getCountry(profile.country)) {
     return {
-      error:
-        'Please select your age group.',
+      error: 'Please select a valid country.',
       success: false,
     };
   }
 
-  if (
-    gender &&
-    !GENDER_OPTIONS.includes(
-      gender as (typeof GENDER_OPTIONS)[number],
-    )
-  ) {
+  if (!getCurrency(profile.currency)) {
     return {
-      error:
-        'Please select a valid gender.',
-      success: false,
-    };
-  }
-
-  if (
-    !country ||
-    !getCountry(country)
-  ) {
-    return {
-      error:
-        'Please select a valid country.',
-      success: false,
-    };
-  }
-
-  if (!city) {
-    return {
-      error:
-        'Please enter your city.',
-      success: false,
-    };
-  }
-
-  if (
-    !currency ||
-    !getCurrency(currency)
-  ) {
-    return {
-      error:
-        'Please select a valid currency.',
-      success: false,
-    };
-  }
-
-  if (
-    mobileNumber &&
-    !/^[+0-9()\s-]{7,20}$/.test(
-      mobileNumber,
-    )
-  ) {
-    return {
-      error:
-        'Please enter a valid mobile number.',
+      error: 'Please select a valid currency.',
       success: false,
     };
   }
@@ -145,26 +68,31 @@ export async function completeProfileAction(
     const existingProfile =
       await getCurrentProfile();
 
-    const values = {
-      username,
+    const profileValues:
+      | UserProfileInsert
+      | UserProfileUpdate = {
+      username: profile.username,
       username_key:
-        username.toLowerCase(),
-      age_group: ageGroup,
-      gender: gender || null,
-      country,
-      city,
+        profile.username.toLowerCase(),
+      age_group: profile.ageGroup,
+      gender: profile.gender || null,
+      country: profile.country,
+      city: profile.city,
       mobile_number:
-        mobileNumber || null,
-      currency,
+        profile.mobileNumber || null,
+      currency: profile.currency,
     };
 
     if (existingProfile) {
       await updateCurrentProfile(
-        values,
+        profileValues as UserProfileUpdate,
       );
     } else {
       await createCurrentProfile(
-        values,
+        profileValues as Omit<
+          UserProfileInsert,
+          'user_id'
+        >,
       );
     }
 

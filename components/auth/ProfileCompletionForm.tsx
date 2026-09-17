@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  useActionState,
   useEffect,
   useMemo,
   useRef,
@@ -9,17 +8,35 @@ import {
 } from 'react';
 
 import { useRouter } from 'next/navigation';
+import {
+  useForm,
+  type SubmitHandler,
+} from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
 import type { UserProfile } from '@/lib/auth/types';
-import { COUNTRY_OPTIONS, getCountryCurrency } from '@/lib/geography/countries';
+
+import {
+  COUNTRY_OPTIONS,
+  getCountryCurrency,
+} from '@/lib/geography/countries';
+
 import { CURRENCY_OPTIONS } from '@/lib/geography/currencies';
-import { completeProfileAction } from '@/lib/auth/profileActions';
+
+import {
+  completeProfileAction,
+  type ProfileCompletionState,
+} from '@/lib/auth/profileActions';
+
+import {
+  profileSchema,
+  type ProfileFormValues,
+} from '@/lib/validation/profile';
 
 interface ProfileCompletionFormProps {
   profile: UserProfile | null;
   intent: 'join' | 'trial';
 }
-
-const initialState = { error: null, success: false };
 
 const AGE_GROUPS = [
   { value: '18-24', label: '18–24' },
@@ -28,11 +45,17 @@ const AGE_GROUPS = [
   { value: '45-54', label: '45–54' },
   { value: '55-64', label: '55–64' },
   { value: '65+', label: '65+' },
-];
+] as const;
 
 const GENDER_OPTIONS = [
-  { value: 'female', label: 'Female' },
-  { value: 'male', label: 'Male' },
+  {
+    value: 'female',
+    label: 'Female',
+  },
+  {
+    value: 'male',
+    label: 'Male',
+  },
   {
     value: 'non_binary',
     label: 'Non-binary',
@@ -41,9 +64,38 @@ const GENDER_OPTIONS = [
     value: 'prefer_not_to_say',
     label: 'Prefer not to say',
   },
-];
+] as const;
 
-const USERNAME_REGEX = /^[A-Za-z0-9_-]{3,30}$/;
+const USERNAME_REGEX =
+  /^[A-Za-z0-9_-]{3,30}$/;
+
+function getAgeGroupValue(
+  value: string | null | undefined,
+): ProfileFormValues['ageGroup'] | undefined {
+  if (
+    AGE_GROUPS.some(
+      (option) => option.value === value,
+    )
+  ) {
+    return value as ProfileFormValues['ageGroup'];
+  }
+
+  return undefined;
+}
+
+function getGenderValue(
+  value: string | null | undefined,
+): ProfileFormValues['gender'] {
+  if (
+    GENDER_OPTIONS.some(
+      (option) => option.value === value,
+    )
+  ) {
+    return value as ProfileFormValues['gender'];
+  }
+
+  return '';
+}
 
 type UsernameStatus =
   | 'idle'
@@ -53,25 +105,134 @@ type UsernameStatus =
   | 'invalid'
   | 'error';
 
-export function ProfileCompletionForm({ profile, intent }: ProfileCompletionFormProps) {
+const MAX_AVATAR_SIZE =
+  2 * 1024 * 1024;
+
+const ALLOWED_AVATAR_TYPES = new Set([
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+]);
+
+export function ProfileCompletionForm({
+  profile,
+  intent,
+}: ProfileCompletionFormProps) {
   const router = useRouter();
-  const [state, formAction, isPending] = useActionState(completeProfileAction, initialState);
-  const [username, setUsername] = useState(profile?.username ?? '');
-  const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>(profile?.username
-    ? 'available'
-    : 'idle',
+
+  const [serverError, setServerError] =
+    useState<string | null>(null);
+
+  const [
+    usernameStatus,
+    setUsernameStatus,
+  ] = useState<UsernameStatus>(
+    profile?.username
+      ? 'available'
+      : 'idle',
   );
 
-  const [country, setCountry] = useState(profile?.country ?? '',);
-  const initialCurrency = profile?.currency ?? getCountryCurrency(profile?.country) ?? '';
-  const [currency, setCurrency,] = useState(initialCurrency,);
-  const [currencyTouched, setCurrencyTouched,] = useState(Boolean(profile?.currency),);
-  const usernameRequestRef = useRef(0);
+  const [
+    currencyTouched,
+    setCurrencyTouched,
+  ] = useState(
+    Boolean(profile?.currency),
+  );
 
-  const selectedCountryCurrency = useMemo(() => getCountryCurrency(country), [country]);
+  const [
+    avatarPreview,
+    setAvatarPreview,
+  ] = useState<string | null>(null);
+
+  const [
+    avatarUploading,
+    setAvatarUploading,
+  ] = useState(false);
+
+  const [
+    avatarError,
+    setAvatarError,
+  ] = useState<string | null>(null);
+
+  const avatarInputRef =
+    useRef<HTMLInputElement>(null);
+
+  const usernameRequestRef =
+    useRef(0);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: {
+      errors,
+      isSubmitting,
+    },
+  } = useForm<
+    ProfileFormValues,
+    unknown,
+    ProfileFormValues
+  >({
+    resolver: zodResolver(profileSchema),
+
+    defaultValues: {
+      username:
+        profile?.username ?? '',
+
+      ageGroup:
+        getAgeGroupValue(
+          profile?.age_group,
+        ),
+
+      gender:
+        getGenderValue(
+          profile?.gender,
+        ),
+
+      country:
+        profile?.country ?? '',
+
+      city:
+        profile?.city ?? '',
+
+      currency:
+        profile?.currency ??
+        getCountryCurrency(
+          profile?.country,
+        ) ??
+        '',
+
+      mobileNumber:
+        profile?.mobile_number ?? '',
+    },
+  });
+
+  const username =
+    watch('username');
+
+  const country =
+    watch('country');
+
+  const currency =
+    watch('currency');
+
+  const selectedCountryCurrency =
+    useMemo(
+      () =>
+        getCountryCurrency(country),
+      [country],
+    );
+
+  /*
+   * ----------------------------------------------------------
+   * Username availability
+   * ----------------------------------------------------------
+   */
 
   useEffect(() => {
-    const value = username.trim();
+    const value =
+      username.trim();
 
     if (!value) {
       setUsernameStatus('idle');
@@ -84,15 +245,19 @@ export function ProfileCompletionForm({ profile, intent }: ProfileCompletionForm
     }
 
     /*
-     * Existing username belonging to this profile
-     * is automatically valid.
+     * Existing username belonging
+     * to this profile is valid.
      */
-    if (profile?.username && value === profile.username) {
+    if (
+      profile?.username &&
+      value === profile.username
+    ) {
       setUsernameStatus('available');
       return;
     }
 
-    const requestId = ++usernameRequestRef.current;
+    const requestId =
+      ++usernameRequestRef.current;
 
     setUsernameStatus('checking');
 
@@ -107,7 +272,10 @@ export function ProfileCompletionForm({ profile, intent }: ProfileCompletionForm
                 )}`,
               );
 
-            if (requestId !== usernameRequestRef.current) {
+            if (
+              requestId !==
+              usernameRequestRef.current
+            ) {
               return;
             }
 
@@ -116,15 +284,26 @@ export function ProfileCompletionForm({ profile, intent }: ProfileCompletionForm
               return;
             }
 
-            const result = await response.json();
+            const result =
+              await response.json();
 
-            if (requestId !== usernameRequestRef.current) {
+            if (
+              requestId !==
+              usernameRequestRef.current
+            ) {
               return;
             }
 
-            setUsernameStatus(result.available ? 'available' : 'taken');
+            setUsernameStatus(
+              result.available
+                ? 'available'
+                : 'taken',
+            );
           } catch {
-            if (requestId === usernameRequestRef.current) {
+            if (
+              requestId ===
+              usernameRequestRef.current
+            ) {
               setUsernameStatus('error');
             }
           }
@@ -133,37 +312,111 @@ export function ProfileCompletionForm({ profile, intent }: ProfileCompletionForm
       );
 
     return () => {
-      window.clearTimeout(
-        timeout,
-      );
+      window.clearTimeout(timeout);
     };
   }, [
     username,
     profile?.username,
   ]);
 
-  useEffect(() => {
-    if (!state.success) {
+  /*
+   * ----------------------------------------------------------
+   * Avatar upload
+   * ----------------------------------------------------------
+   */
+
+  async function handleAvatarChange(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const file =
+      event.target.files?.[0];
+
+    if (!file) {
       return;
     }
 
-    /*
-     * Do not build commerce/trial entitlement logic here yet.
-     *
-     * For this vertical slice, profile completion ends
-     * successfully. The next step can branch:
-     *
-     * join  → checkout
-     * trial → entitlement → welcome
-     */
-    router.push(
-      `/profile/complete/success?intent=${intent}`,
-    );
-  }, [
-    state.success,
-    intent,
-    router,
-  ]);
+    setAvatarError(null);
+
+    if (
+      !ALLOWED_AVATAR_TYPES.has(
+        file.type,
+      )
+    ) {
+      setAvatarError(
+        'Please upload a PNG, JPEG, or WebP image.',
+      );
+
+      event.target.value = '';
+      return;
+    }
+
+    if (
+      file.size > MAX_AVATAR_SIZE
+    ) {
+      setAvatarError(
+        'Your profile picture must be 2 MB or smaller.',
+      );
+
+      event.target.value = '';
+      return;
+    }
+
+    const previewUrl =
+      URL.createObjectURL(file);
+
+    setAvatarPreview(previewUrl);
+    setAvatarUploading(true);
+
+    try {
+      const formData =
+        new FormData();
+
+      formData.append(
+        'file',
+        file,
+      );
+
+      const response =
+        await fetch(
+          '/api/profile/avatar',
+          {
+            method: 'POST',
+            body: formData,
+          },
+        );
+
+      const result =
+        await response.json();
+
+      if (
+        !response.ok ||
+        !result.success
+      ) {
+        setAvatarPreview(null);
+
+        setAvatarError(
+          result.error ??
+            'Unable to upload your profile picture.',
+        );
+
+        return;
+      }
+    } catch {
+      setAvatarPreview(null);
+
+      setAvatarError(
+        'Unable to upload your profile picture.',
+      );
+    } finally {
+      setAvatarUploading(false);
+    }
+  }
+
+  /*
+   * ----------------------------------------------------------
+   * Country → currency
+   * ----------------------------------------------------------
+   */
 
   function handleCountryChange(
     event: React.ChangeEvent<HTMLSelectElement>,
@@ -171,30 +424,80 @@ export function ProfileCompletionForm({ profile, intent }: ProfileCompletionForm
     const nextCountry =
       event.target.value;
 
-    setCountry(nextCountry);
+    setValue(
+      'country',
+      nextCountry,
+      {
+        shouldValidate: true,
+        shouldDirty: true,
+      },
+    );
 
     if (
       !currencyTouched &&
       selectedCountryCurrency
     ) {
-      setCurrency(
+      setValue(
+        'currency',
         selectedCountryCurrency,
+        {
+          shouldValidate: true,
+          shouldDirty: true,
+        },
       );
     }
   }
 
-  const usernameCanSubmit =
-    usernameStatus ===
-    'available';
+  /*
+   * ----------------------------------------------------------
+   * Profile submission
+   * ----------------------------------------------------------
+   */
+
+  const onSubmit:
+    SubmitHandler<ProfileFormValues> =
+    async (values) => {
+      setServerError(null);
+
+      if (
+        usernameStatus !==
+        'available'
+      ) {
+        setServerError(
+          'Please choose an available username.',
+        );
+        return;
+      }
+
+      const result:
+        ProfileCompletionState =
+        await completeProfileAction(
+          values,
+        );
+
+      if (!result.success) {
+        setServerError(
+          result.error ??
+            'Unable to save your profile.',
+        );
+
+        return;
+      }
+
+      router.push(
+        `/profile/complete/success?intent=${intent}`,
+      );
+    };
 
   return (
     <div className="space-y-12">
+      {/* Header */}
       <header className="max-w-2xl">
         <p className="mb-5 text-[11px] font-medium uppercase tracking-[0.28em] text-primary">
           A little more about you
         </p>
 
-        <h1 className="text-4xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-5xl lg:text-6xl">
+        <h1 className="text-4xl font-semibold leading-[1.02] tracking-[-0.055em] sm:text-5xl lg:text-6xl">
           Let&apos;s set up your profile.
         </h1>
 
@@ -206,14 +509,91 @@ export function ProfileCompletionForm({ profile, intent }: ProfileCompletionForm
       </header>
 
       <form
-        action={formAction}
+        onSubmit={handleSubmit(onSubmit)}
         className="space-y-10"
       >
-        <input
-          type="hidden"
-          name="intent"
-          value={intent}
-        />
+        {/* Profile picture */}
+        <section>
+          <label
+            htmlFor="avatar"
+            className="mb-3 block text-sm font-medium"
+          >
+            Profile picture
+            <span className="ml-2 font-normal text-muted-foreground">
+              Optional
+            </span>
+          </label>
+
+          <p className="mb-5 max-w-2xl text-sm leading-6 text-muted-foreground">
+            Add a picture so people can recognize
+            you inside Urge.
+          </p>
+
+          <input
+            ref={avatarInputRef}
+            id="avatar"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            onChange={handleAvatarChange}
+            disabled={
+              isSubmitting ||
+              avatarUploading
+            }
+            className="sr-only"
+          />
+
+          <button
+            type="button"
+            onClick={() =>
+              avatarInputRef.current?.click()
+            }
+            disabled={
+              isSubmitting ||
+              avatarUploading
+            }
+            className="group block"
+          >
+            <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border border-border bg-muted/30 transition-colors group-hover:border-primary">
+              {avatarPreview ? (
+                <img
+                  src={avatarPreview}
+                  alt="Profile picture preview"
+                  className="h-full w-full object-cover"
+                />
+              ) : profile?.avatar_path ? (
+                <span className="px-4 text-center text-sm text-muted-foreground">
+                  Current photo
+                </span>
+              ) : (
+                <span className="text-4xl font-light text-muted-foreground">
+                  +
+                </span>
+              )}
+            </div>
+
+            <span className="mt-3 block text-sm font-medium">
+              {avatarUploading
+                ? 'Uploading…'
+                : profile?.avatar_path ||
+                    avatarPreview
+                  ? 'Change photo'
+                  : 'Add a photo'}
+            </span>
+          </button>
+
+          <p className="mt-2 text-xs text-muted-foreground">
+            PNG, JPEG or WebP · Maximum 2 MB
+          </p>
+
+          {avatarError && (
+            <p
+              role="alert"
+              className="mt-3 text-sm text-destructive"
+            >
+              {avatarError}
+            </p>
+          )}
+        </section>
 
         {/* Username */}
         <section>
@@ -231,62 +611,58 @@ export function ProfileCompletionForm({ profile, intent }: ProfileCompletionForm
 
           <input
             id="username"
-            name="username"
             type="text"
-            value={username}
-            onChange={(event) =>
-              setUsername(
-                event.target.value,
-              )
-            }
             placeholder="e.g. amit"
-            required
-            minLength={3}
-            maxLength={30}
-            pattern="[A-Za-z0-9_-]{3,30}"
             autoComplete="username"
-            disabled={isPending}
+            disabled={isSubmitting}
+            {...register('username')}
             className="h-14 w-full max-w-2xl rounded-md border border-input bg-background px-4 text-base outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-16 sm:text-lg"
           />
 
           <div className="mt-2 min-h-5 text-xs">
             {usernameStatus ===
               'checking' && (
-                <p className="text-muted-foreground">
-                  Checking availability…
-                </p>
-              )}
+              <p className="text-muted-foreground">
+                Checking availability…
+              </p>
+            )}
 
             {usernameStatus ===
               'available' && (
-                <p className="text-primary">
-                  Username is available.
-                </p>
-              )}
+              <p className="text-primary">
+                Username is available.
+              </p>
+            )}
 
             {usernameStatus ===
               'taken' && (
-                <p className="text-destructive">
-                  That username is already taken.
-                </p>
-              )}
+              <p className="text-destructive">
+                That username is already taken.
+              </p>
+            )}
 
             {usernameStatus ===
               'invalid' && (
-                <p className="text-muted-foreground">
-                  3–30 characters. Letters,
-                  numbers, underscores and
-                  hyphens only.
-                </p>
-              )}
+              <p className="text-muted-foreground">
+                3–30 characters. Letters,
+                numbers, underscores and
+                hyphens only.
+              </p>
+            )}
 
             {usernameStatus ===
               'error' && (
-                <p className="text-destructive">
-                  We couldn&apos;t check username
-                  availability.
-                </p>
-              )}
+              <p className="text-destructive">
+                We couldn&apos;t check username
+                availability.
+              </p>
+            )}
+
+            {errors.username && (
+              <p className="text-destructive">
+                {errors.username.message}
+              </p>
+            )}
           </div>
         </section>
 
@@ -302,12 +678,8 @@ export function ProfileCompletionForm({ profile, intent }: ProfileCompletionForm
 
             <select
               id="ageGroup"
-              name="ageGroup"
-              defaultValue={
-                profile?.age_group ?? ''
-              }
-              required
-              disabled={isPending}
+              disabled={isSubmitting}
+              {...register('ageGroup')}
               className="h-14 w-full rounded-md border border-input bg-background px-4 text-base outline-none focus:ring-2 focus:ring-ring sm:h-16 sm:text-lg"
             >
               <option
@@ -321,15 +693,19 @@ export function ProfileCompletionForm({ profile, intent }: ProfileCompletionForm
                 (option) => (
                   <option
                     key={option.value}
-                    value={
-                      option.value
-                    }
+                    value={option.value}
                   >
                     {option.label}
                   </option>
                 ),
               )}
             </select>
+
+            {errors.ageGroup && (
+              <p className="mt-2 text-xs text-destructive">
+                {errors.ageGroup.message}
+              </p>
+            )}
           </div>
 
           <div>
@@ -345,11 +721,8 @@ export function ProfileCompletionForm({ profile, intent }: ProfileCompletionForm
 
             <select
               id="gender"
-              name="gender"
-              defaultValue={
-                profile?.gender ?? ''
-              }
-              disabled={isPending}
+              disabled={isSubmitting}
+              {...register('gender')}
               className="h-14 w-full rounded-md border border-input bg-background px-4 text-base outline-none focus:ring-2 focus:ring-ring sm:h-16 sm:text-lg"
             >
               <option value="">
@@ -360,15 +733,19 @@ export function ProfileCompletionForm({ profile, intent }: ProfileCompletionForm
                 (option) => (
                   <option
                     key={option.value}
-                    value={
-                      option.value
-                    }
+                    value={option.value}
                   >
                     {option.label}
                   </option>
                 ),
               )}
             </select>
+
+            {errors.gender && (
+              <p className="mt-2 text-xs text-destructive">
+                {errors.gender.message}
+              </p>
+            )}
           </div>
         </section>
 
@@ -384,13 +761,9 @@ export function ProfileCompletionForm({ profile, intent }: ProfileCompletionForm
 
             <select
               id="country"
-              name="country"
               value={country}
-              onChange={
-                handleCountryChange
-              }
-              required
-              disabled={isPending}
+              onChange={handleCountryChange}
+              disabled={isSubmitting}
               className="h-14 w-full rounded-md border border-input bg-background px-4 text-base outline-none focus:ring-2 focus:ring-ring sm:h-16 sm:text-lg"
             >
               <option
@@ -404,15 +777,19 @@ export function ProfileCompletionForm({ profile, intent }: ProfileCompletionForm
                 (option) => (
                   <option
                     key={option.code}
-                    value={
-                      option.code
-                    }
+                    value={option.code}
                   >
                     {option.name}
                   </option>
                 ),
               )}
             </select>
+
+            {errors.country && (
+              <p className="mt-2 text-xs text-destructive">
+                {errors.country.message}
+              </p>
+            )}
           </div>
 
           <div>
@@ -425,16 +802,18 @@ export function ProfileCompletionForm({ profile, intent }: ProfileCompletionForm
 
             <input
               id="city"
-              name="city"
               type="text"
-              defaultValue={
-                profile?.city ?? ''
-              }
               placeholder="e.g. Bengaluru"
-              required
-              disabled={isPending}
+              disabled={isSubmitting}
+              {...register('city')}
               className="h-14 w-full rounded-md border border-input bg-background px-4 text-base outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-16 sm:text-lg"
             />
+
+            {errors.city && (
+              <p className="mt-2 text-xs text-destructive">
+                {errors.city.message}
+              </p>
+            )}
           </div>
         </section>
 
@@ -455,18 +834,20 @@ export function ProfileCompletionForm({ profile, intent }: ProfileCompletionForm
 
           <select
             id="currency"
-            name="currency"
             value={currency}
             onChange={(event) => {
-              setCurrency(
+              setValue(
+                'currency',
                 event.target.value,
+                {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                },
               );
-              setCurrencyTouched(
-                true,
-              );
+
+              setCurrencyTouched(true);
             }}
-            required
-            disabled={isPending}
+            disabled={isSubmitting}
             className="h-14 w-full max-w-2xl rounded-md border border-input bg-background px-4 text-base outline-none focus:ring-2 focus:ring-ring sm:h-16 sm:text-lg"
           >
             <option
@@ -480,9 +861,7 @@ export function ProfileCompletionForm({ profile, intent }: ProfileCompletionForm
               (option) => (
                 <option
                   key={option.code}
-                  value={
-                    option.code
-                  }
+                  value={option.code}
                 >
                   {option.symbol}{' '}
                   {option.code} —{' '}
@@ -491,6 +870,12 @@ export function ProfileCompletionForm({ profile, intent }: ProfileCompletionForm
               ),
             )}
           </select>
+
+          {errors.currency && (
+            <p className="mt-2 text-xs text-destructive">
+              {errors.currency.message}
+            </p>
+          )}
         </section>
 
         {/* Mobile */}
@@ -513,37 +898,44 @@ export function ProfileCompletionForm({ profile, intent }: ProfileCompletionForm
 
           <input
             id="mobileNumber"
-            name="mobileNumber"
             type="tel"
-            defaultValue={
-              profile?.mobile_number ?? ''
-            }
             placeholder="+91 98765 43210"
             autoComplete="tel"
-            disabled={isPending}
+            disabled={isSubmitting}
+            {...register('mobileNumber')}
             className="h-14 w-full max-w-2xl rounded-md border border-input bg-background px-4 text-base outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-16 sm:text-lg"
           />
+
+          {errors.mobileNumber && (
+            <p className="mt-2 text-xs text-destructive">
+              {errors.mobileNumber.message}
+            </p>
+          )}
         </section>
 
-        {state.error && (
+        {/* Server error */}
+        {serverError && (
           <p
             role="alert"
             className="text-sm font-medium text-destructive"
           >
-            {state.error}
+            {serverError}
           </p>
         )}
 
+        {/* Submit */}
         <div className="border-t border-border pt-8">
           <button
             type="submit"
             disabled={
-              isPending ||
-              !usernameCanSubmit
+              isSubmitting ||
+              usernameStatus !==
+                'available' ||
+              avatarUploading
             }
             className="h-14 w-full max-w-2xl rounded-md bg-primary px-6 text-base font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 sm:h-16 sm:text-lg"
           >
-            {isPending
+            {isSubmitting
               ? 'Saving your profile…'
               : 'Continue'}
           </button>
