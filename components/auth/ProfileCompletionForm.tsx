@@ -8,10 +8,12 @@ import {
 } from 'react';
 
 import { useRouter } from 'next/navigation';
+
 import {
   useForm,
   type SubmitHandler,
 } from 'react-hook-form';
+
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import type { UserProfile } from '@/lib/auth/types';
@@ -138,6 +140,17 @@ export function ProfileCompletionForm({
   ] = useState(
     Boolean(profile?.currency),
   );
+
+  /*
+   * avatarUrl is the persisted public URL.
+   *
+   * avatarPreview is the temporary browser URL
+   * shown while a new image is uploading.
+   */
+  const [avatarUrl, setAvatarUrl] =
+    useState<string | null>(
+      profile?.avatar_url ?? null,
+    );
 
   const [
     avatarPreview,
@@ -401,6 +414,18 @@ export function ProfileCompletionForm({
 
         return;
       }
+
+      /*
+       * The API has already persisted this URL
+       * to user_profile.avatar_url.
+       */
+      setAvatarUrl(result.avatarUrl);
+
+      /*
+       * We no longer need the temporary
+       * browser preview after a successful upload.
+       */
+      setAvatarPreview(null);
     } catch {
       setAvatarPreview(null);
 
@@ -409,6 +434,11 @@ export function ProfileCompletionForm({
       );
     } finally {
       setAvatarUploading(false);
+
+      /*
+       * Allow selecting the same file again.
+       */
+      event.target.value = '';
     }
   }
 
@@ -466,6 +496,7 @@ export function ProfileCompletionForm({
         setServerError(
           'Please choose an available username.',
         );
+
         return;
       }
 
@@ -560,10 +591,12 @@ export function ProfileCompletionForm({
                   alt="Profile picture preview"
                   className="h-full w-full object-cover"
                 />
-              ) : profile?.avatar_path ? (
-                <span className="px-4 text-center text-sm text-muted-foreground">
-                  Current photo
-                </span>
+              ) : avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt="Profile picture"
+                  className="h-full w-full object-cover"
+                />
               ) : (
                 <span className="text-4xl font-light text-muted-foreground">
                   +
@@ -574,7 +607,7 @@ export function ProfileCompletionForm({
             <span className="mt-3 block text-sm font-medium">
               {avatarUploading
                 ? 'Uploading…'
-                : profile?.avatar_path ||
+                : avatarUrl ||
                     avatarPreview
                   ? 'Change photo'
                   : 'Add a photo'}

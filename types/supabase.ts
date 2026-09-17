@@ -810,7 +810,7 @@ export type Database = {
       user_profile: {
         Row: {
           age_group: string | null
-          avatar_path: string | null
+          avatar_url: string | null
           capabilities: Json
           city: string | null
           constraints: Json
@@ -836,7 +836,7 @@ export type Database = {
         }
         Insert: {
           age_group?: string | null
-          avatar_path?: string | null
+          avatar_url?: string | null
           capabilities?: Json
           city?: string | null
           constraints?: Json
@@ -862,7 +862,7 @@ export type Database = {
         }
         Update: {
           age_group?: string | null
-          avatar_path?: string | null
+          avatar_url?: string | null
           capabilities?: Json
           city?: string | null
           constraints?: Json
