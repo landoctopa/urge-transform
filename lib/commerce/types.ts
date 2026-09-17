@@ -4,3 +4,9 @@ export interface PriceCalculation {
   tax: number;
   total: number;
 }
+
+export interface CreateCheckoutInput {
+  offeringSlug: string;
+  priceId: string;
+  discountCode?: string;
+}
