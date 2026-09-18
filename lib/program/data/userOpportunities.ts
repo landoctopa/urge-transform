@@ -99,7 +99,7 @@ export async function getUserOpportunities(): Promise<
         node_key
       )
     `)
-    .eq('user_id', user.id)
+    .eq('user_id', user.auth.id)
     .order('created_at', {
       ascending: true,
     });
@@ -138,7 +138,7 @@ export async function createUserOpportunity(
   }
 
   const row: OpportunityInsert = {
-    user_id: user.id,
+    user_id: user.auth.id,
     title: input.title ?? null,
     description: input.description ?? null,
     status: input.status ?? 'exploring',

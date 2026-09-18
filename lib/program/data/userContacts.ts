@@ -76,7 +76,7 @@ export async function getUserContacts(): Promise<
         node_key
       )
     `)
-    .eq('user_id', user.id)
+    .eq('user_id', user.auth.id)
     .order('created_at', {
       ascending: true,
     });
@@ -111,7 +111,7 @@ export async function createUserContact(
   }
 
   const row: ContactInsert = {
-    user_id: user.id,
+    user_id: user.auth.id,
     name: input.name,
     role: input.role ?? null,
     organization: input.organization ?? null,

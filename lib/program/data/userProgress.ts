@@ -74,7 +74,7 @@ export async function getUserProgress(missionKey?: string,): Promise<UserNodePro
         mission_key
       )
     `)
-    .eq('user_id', user.id,);
+    .eq('user_id', user.auth.id,);
 
   if (missionKey) {
     query = query.eq(
@@ -118,7 +118,7 @@ export async function getNodeProgress(nodeKey: string,): Promise<UserNodeProgres
 
   const { data, error } = await supabase.from('user_progress')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('user_id', user.auth.id)
     .eq('program_content_id', programContentId)
     .maybeSingle();
 
@@ -167,7 +167,7 @@ export async function upsertNodeProgress(nodeKey: string, input: UpsertNodeProgr
   const programContentId = await getProgramContentId(nodeKey);
 
   const row: UserProgressInsert = {
-    user_id: user.id,
+    user_id: user.auth.id,
     program_content_id: programContentId,
     status: input.status,
     started_at: input.startedAt ?? null,

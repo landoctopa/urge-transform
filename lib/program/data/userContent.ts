@@ -63,7 +63,7 @@ export async function getUserContent(): Promise<
   } = await supabase
     .from('user_content')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('user_id', user.auth.id)
     .order('created_at', {
       ascending: true,
     });
@@ -84,7 +84,7 @@ export async function createUserContent(
     await getAuthenticatedSupabase();
 
   const row: ContentInsert = {
-    user_id: user.id,
+    user_id: user.auth.id,
     content_type: input.contentType,
     title: input.title ?? null,
     body: input.body ?? null,

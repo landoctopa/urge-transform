@@ -78,7 +78,7 @@ export async function getUserCommitments(): Promise<
         node_key
       )
     `)
-    .eq('user_id', user.id)
+    .eq('user_id', user.auth.id)
     .order('created_at', {
       ascending: true,
     });
@@ -113,7 +113,7 @@ export async function createUserCommitment(
   }
 
   const row: CommitmentInsert = {
-    user_id: user.id,
+    user_id: user.auth.id,
     commitment: input.commitment,
     reason: input.reason ?? null,
     status: input.status ?? 'active',

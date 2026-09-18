@@ -91,7 +91,7 @@ export async function getUserProfile(): Promise<
         .select('*')
         .eq(
             'user_id',
-            user.id,
+            user.auth.id,
         )
         .maybeSingle();
 
@@ -128,7 +128,7 @@ export async function createUserProfile(
     const insert: UserProfileInsert = {
         ...values,
         user_id:
-            user.id,
+            user.auth.id,
     };
 
     const {
@@ -169,7 +169,7 @@ export async function updateUserProfile(
     const update: UserProfileUpdate = {
         ...values,
         user_id:
-            user.id,
+            user.auth.id,
     };
 
     const {
@@ -180,7 +180,7 @@ export async function updateUserProfile(
         .update(update)
         .eq(
             'user_id',
-            user.id,
+            user.auth.id,
         )
         .select('*')
         .single();
@@ -212,7 +212,7 @@ export async function upsertUserProfile(
     const insert: UserProfileInsert = {
         ...values,
         user_id:
-            user.id,
+            user.auth.id,
     };
 
     const {

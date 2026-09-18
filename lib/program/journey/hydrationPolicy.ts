@@ -11,29 +11,14 @@ const DOMAIN_MAP: Record<
   string,
   HydrationDomain
 > = {
-  'user.profile':
-    'profile',
 
-  'user.opportunities':
-    'opportunities',
-
-  'user.projects':
-    'projects',
-
-  'user.contacts':
-    'contacts',
-
-  'user.commitments':
-    'commitments',
-
-  'user.tasks':
-    'tasks',
-
-  'user.observations':
-    'observations',
-
-  'mission.progress':
-    'progress',
+  'user.opportunities':'opportunities',
+  'user.projects':'projects',
+  'user.contacts':'contacts',
+  'user.commitments':'commitments',
+  'user.tasks':'tasks',
+  'user.observations':'observations',
+  'mission.progress':'progress',
 };
 
 export function getHydrationDomains(

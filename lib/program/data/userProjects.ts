@@ -63,7 +63,7 @@ export async function getUserProjects(): Promise<
   } = await supabase
     .from('user_projects')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('user_id', user.auth.id)
     .order('created_at', {
       ascending: true,
     });
@@ -84,7 +84,7 @@ export async function createUserProject(
     await getAuthenticatedSupabase();
 
   const row: ProjectInsert = {
-    user_id: user.id,
+    user_id: user.auth.id,
     opportunity_id:
       input.opportunityId ?? null,
     name: input.name,

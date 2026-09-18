@@ -85,7 +85,7 @@ export async function getUserObservations(): Promise<
         node_key
       )
     `)
-    .eq('user_id', user.id)
+    .eq('user_id', user.auth.id)
     .order('created_at', {
       ascending: true,
     });
@@ -124,7 +124,7 @@ export async function createUserObservation(
   }
 
   const row: ObservationInsert = {
-    user_id: user.id,
+    user_id: user.auth.id,
     type: input.type ?? null,
     title: input.title ?? null,
     content: input.content ?? {},
