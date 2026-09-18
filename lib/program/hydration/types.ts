@@ -1,4 +1,3 @@
-import type { UserProfile } from '@/lib/program/data/userProfile';
 import type { UserNodeProgress } from '@/lib/program/data/userProgress';
 import type { UserOpportunity } from '@/lib/program/data/userOpportunities';
 import type { UserProject } from '@/lib/program/data/userProjects';
@@ -8,7 +7,6 @@ import type { UserTask } from '@/lib/program/data/userTasks';
 import type { UserObservation } from '@/lib/program/data/userObservations';
 
 export type HydrationDomain =
-  | 'profile'
   | 'progress'
   | 'opportunities'
   | 'projects'
@@ -23,7 +21,6 @@ export interface ProgramHydrationRequest {
 }
 
 export interface ProgramHydrationState {
-  profile?: UserProfile | null;
   progress?: UserNodeProgress[];
   opportunities?: UserOpportunity[];
   projects?: UserProject[];

@@ -1,5 +1,4 @@
 import {
-  $userProfileStore,
   $userProgressStore,
   $userOpportunitiesStore,
   $userProjectsStore,
@@ -8,6 +7,8 @@ import {
   $userTasksStore,
   $userObservationsStore,
 } from '@/lib/program/stores';
+
+import {$userProfileStore} from '@/lib/auth/stores';
 
 import type { ProgramNode } from '@/lib/program/types';
 
@@ -28,7 +29,7 @@ function getContextValue(
 
   switch (field) {
     case 'profile':
-      return $userProfileStore.get();
+      return $userProfileStore.get().profile;
 
     case 'progress':
       return $userProgressStore.get();

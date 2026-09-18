@@ -1,7 +1,6 @@
 'use client';
 
 import {
-    setUserProfile,
     setUserProgress,
     setUserOpportunities,
     setUserProjects,
@@ -14,28 +13,6 @@ import {
 import type { ProgramHydrationState } from './types';
 
 export function hydrateProgramState(state: ProgramHydrationState): void {
-    if (state.profile !== undefined) {
-        if (state.profile !== null) {
-            setUserProfile({
-                id: state.profile.id,
-                userId: state.profile.userId,
-                capabilities: state.profile.capabilities,
-                constraints: state.profile.constraints,
-                desiredFuture: state.profile.desiredFuture,
-                experience: state.profile.experience,
-                fears: state.profile.fears,
-                metadata: state.profile.metadata,
-                motivations: state.profile.motivations,
-                networkContext: state.profile.networkContext,
-                perceivedBarriers: state.profile.perceivedBarriers,
-                quitConditions: state.profile.quitConditions,
-                resources: state.profile.resources,
-                createdAt: state.profile.createdAt,
-                updatedAt: state.profile.updatedAt,
-                hydrated: true,
-            });
-        }
-    }
 
     if (state.progress !== undefined) {
         const nodes = Object.fromEntries(state.progress.map(
