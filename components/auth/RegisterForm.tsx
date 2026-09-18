@@ -122,43 +122,52 @@ export function RegisterForm() {
           />
         </div>
 
-        <div className="relative">
-          <Input
-            id="password"
-            name="password"
-            type={showPassword ? 'text' : 'password'}
-            required
-            minLength={8}
-            autoComplete="new-password"
-            placeholder="At least 8 characters"
-            disabled={isPending}
-            className="h-14 pr-14 sm:h-16"
-          />
-
-          <button
-            type="button"
-            onClick={() =>
-              setShowPassword((visible) => !visible)
-            }
-            disabled={isPending}
-            aria-label={
-              showPassword
-                ? 'Hide password'
-                : 'Show password'
-            }
-            className="absolute inset-y-0 right-0 flex w-14 items-center justify-center text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+        <div>
+          <label
+            htmlFor="password"
+            className="mb-3 block text-sm font-medium"
           >
-            {showPassword ? (
-              <EyeOff className="h-5 w-5" />
-            ) : (
-              <Eye className="h-5 w-5" />
-            )}
-          </button>
+            Password
+          </label>
+
+          <div className="relative">
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              required
+              minLength={8}
+              autoComplete="new-password"
+              placeholder="At least 8 characters"
+              disabled={isPending}
+              className="h-14 pr-14 sm:h-16"
+            />
+
+            <button
+              type="button"
+              onClick={() =>
+                setShowPassword((visible) => !visible)
+              }
+              disabled={isPending}
+              aria-label={
+                showPassword
+                  ? 'Hide password'
+                  : 'Show password'
+              }
+              className="absolute right-0 top-1/2 flex h-10 w-14 -translate-y-1/2 items-center justify-center text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {showPassword ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
+            </button>
+          </div>
+
           <p className="mt-2 text-xs text-muted-foreground">
             At least 8 characters.
           </p>
         </div>
-
 
 
 

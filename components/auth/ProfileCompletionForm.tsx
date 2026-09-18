@@ -2,7 +2,6 @@
 
 import {
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -15,6 +14,12 @@ import {
 } from 'react-hook-form';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+
+import {
+  getCountryCallingCode,
+  parsePhoneNumberFromString,
+  type CountryCode,
+} from 'libphonenumber-js';
 
 import type { UserProfile } from '@/lib/auth/types';
 
@@ -41,12 +46,30 @@ interface ProfileCompletionFormProps {
 }
 
 const AGE_GROUPS = [
-  { value: '18-24', label: '18–24' },
-  { value: '25-34', label: '25–34' },
-  { value: '35-44', label: '35–44' },
-  { value: '45-54', label: '45–54' },
-  { value: '55-64', label: '55–64' },
-  { value: '65+', label: '65+' },
+  {
+    value: '18-24',
+    label: '18–24',
+  },
+  {
+    value: '25-34',
+    label: '25–34',
+  },
+  {
+    value: '35-44',
+    label: '35–44',
+  },
+  {
+    value: '45-54',
+    label: '45–54',
+  },
+  {
+    value: '55-64',
+    label: '55–64',
+  },
+  {
+    value: '65+',
+    label: '65+',
+  },
 ] as const;
 
 const GENDER_OPTIONS = [
@@ -70,6 +93,30 @@ const GENDER_OPTIONS = [
 
 const USERNAME_REGEX =
   /^[A-Za-z0-9_-]{3,30}$/;
+
+const MAX_AVATAR_SIZE =
+  2 * 1024 * 1024;
+
+const ALLOWED_AVATAR_TYPES =
+  new Set([
+    'image/png',
+    'image/jpeg',
+    'image/webp',
+  ]);
+
+type UsernameStatus =
+  | 'idle'
+  | 'checking'
+  | 'available'
+  | 'taken'
+  | 'invalid'
+  | 'error';
+
+/*
+ * ----------------------------------------------------------
+ * Helpers
+ * ----------------------------------------------------------
+ */
 
 function getAgeGroupValue(
   value: string | null | undefined,
@@ -99,22 +146,120 @@ function getGenderValue(
   return '';
 }
 
-type UsernameStatus =
-  | 'idle'
-  | 'checking'
-  | 'available'
-  | 'taken'
-  | 'invalid'
-  | 'error';
+/*
+ * COUNTRY_OPTIONS uses ISO country codes.
+ *
+ * Keep only countries understood by libphonenumber-js.
+ */
+function isPhoneCountryCode(
+  value: string | null | undefined,
+): value is CountryCode {
+  if (!value) {
+    return false;
+  }
 
-const MAX_AVATAR_SIZE =
-  2 * 1024 * 1024;
+  try {
+    getCountryCallingCode(
+      value.toUpperCase() as CountryCode,
+    );
 
-const ALLOWED_AVATAR_TYPES = new Set([
-  'image/png',
-  'image/jpeg',
-  'image/webp',
-]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function getInitialPhoneCountry(
+  country: string | null | undefined,
+): CountryCode {
+  const normalized =
+    country?.toUpperCase();
+
+  if (
+    isPhoneCountryCode(normalized)
+  ) {
+    return normalized;
+  }
+
+  /*
+   * Default only when there is no usable
+   * profile country yet.
+   */
+  return 'IN';
+}
+
+function getInitialMobileNumber(
+  mobileNumber: string | null | undefined,
+  phoneCountry: CountryCode,
+): string {
+  const value =
+    mobileNumber?.trim() ?? '';
+
+  if (!value) {
+    return '';
+  }
+
+  try {
+    /*
+     * Convert a stored international number
+     * back into a user-friendly national number
+     * for the input.
+     */
+    const parsed =
+      parsePhoneNumberFromString(
+        value,
+        phoneCountry,
+      );
+
+    if (parsed) {
+      return parsed.nationalNumber;
+    }
+  } catch {
+    /*
+     * Fall through and preserve the stored value.
+     */
+  }
+
+  return value;
+}
+
+function getPhoneCallingCode(
+  country: string,
+): string {
+  try {
+    if (
+      !isPhoneCountryCode(country)
+    ) {
+      return '';
+    }
+
+    return `+${getCountryCallingCode(
+      country,
+    )}`;
+  } catch {
+    return '';
+  }
+}
+
+const PHONE_COUNTRY_OPTIONS =
+  COUNTRY_OPTIONS
+    .map((option) => ({
+      ...option,
+      callingCode:
+        getPhoneCallingCode(
+          option.code,
+        ),
+    }))
+    .filter(
+      (option) =>
+        Boolean(option.callingCode),
+    );
+
+/*
+ * ----------------------------------------------------------
+ * Component
+ * ----------------------------------------------------------
+ */
 
 export function ProfileCompletionForm({
   profile,
@@ -122,8 +267,27 @@ export function ProfileCompletionForm({
 }: ProfileCompletionFormProps) {
   const router = useRouter();
 
-  const [serverError, setServerError] =
-    useState<string | null>(null);
+  /*
+   * --------------------------------------------------------
+   * General state
+   * --------------------------------------------------------
+   */
+
+  const [
+    serverError,
+    setServerError,
+  ] = useState<string | null>(null);
+
+  const [
+    submitted,
+    setSubmitted,
+  ] = useState(false);
+
+  /*
+   * --------------------------------------------------------
+   * Username availability
+   * --------------------------------------------------------
+   */
 
   const [
     usernameStatus,
@@ -134,6 +298,15 @@ export function ProfileCompletionForm({
       : 'idle',
   );
 
+  const usernameRequestRef =
+    useRef(0);
+
+  /*
+   * --------------------------------------------------------
+   * Currency
+   * --------------------------------------------------------
+   */
+
   const [
     currencyTouched,
     setCurrencyTouched,
@@ -142,20 +315,48 @@ export function ProfileCompletionForm({
   );
 
   /*
-   * avatarUrl is the persisted public URL.
-   *
-   * avatarPreview is the temporary browser URL
-   * shown while a new image is uploading.
+   * --------------------------------------------------------
+   * Phone
+   * --------------------------------------------------------
    */
-  const [avatarUrl, setAvatarUrl] =
-    useState<string | null>(
-      profile?.avatar_url ?? null,
+
+  const initialPhoneCountry =
+    getInitialPhoneCountry(
+      profile?.country,
     );
+
+  const [
+    phoneCountry,
+    setPhoneCountry,
+  ] =
+    useState<CountryCode>(
+      initialPhoneCountry,
+    );
+
+  const [
+    phoneCountryTouched,
+    setPhoneCountryTouched,
+  ] = useState(false);
+
+  /*
+   * --------------------------------------------------------
+   * Avatar
+   * --------------------------------------------------------
+   */
+
+  const [
+    avatarUrl,
+    setAvatarUrl,
+  ] = useState<string | null>(
+    profile?.avatar_url ?? null,
+  );
 
   const [
     avatarPreview,
     setAvatarPreview,
-  ] = useState<string | null>(null);
+  ] = useState<string | null>(
+    null,
+  );
 
   const [
     avatarUploading,
@@ -165,13 +366,18 @@ export function ProfileCompletionForm({
   const [
     avatarError,
     setAvatarError,
-  ] = useState<string | null>(null);
+  ] = useState<string | null>(
+    null,
+  );
 
   const avatarInputRef =
     useRef<HTMLInputElement>(null);
 
-  const usernameRequestRef =
-    useRef(0);
+  /*
+   * --------------------------------------------------------
+   * Form
+   * --------------------------------------------------------
+   */
 
   const {
     register,
@@ -187,7 +393,8 @@ export function ProfileCompletionForm({
     unknown,
     ProfileFormValues
   >({
-    resolver: zodResolver(profileSchema),
+    resolver:
+      zodResolver(profileSchema),
 
     defaultValues: {
       username:
@@ -217,7 +424,10 @@ export function ProfileCompletionForm({
         '',
 
       mobileNumber:
-        profile?.mobile_number ?? '',
+        getInitialMobileNumber(
+          profile?.mobile_number,
+          initialPhoneCountry,
+        ),
     },
   });
 
@@ -230,17 +440,10 @@ export function ProfileCompletionForm({
   const currency =
     watch('currency');
 
-  const selectedCountryCurrency =
-    useMemo(
-      () =>
-        getCountryCurrency(country),
-      [country],
-    );
-
   /*
-   * ----------------------------------------------------------
+   * --------------------------------------------------------
    * Username availability
-   * ----------------------------------------------------------
+   * --------------------------------------------------------
    */
 
   useEffect(() => {
@@ -258,14 +461,20 @@ export function ProfileCompletionForm({
     }
 
     /*
-     * Existing username belonging
-     * to this profile is valid.
+     * The existing username belongs to
+     * this user, so it is valid.
+     *
+     * Compare case-insensitively because
+     * usernames are stored using username_key.
      */
     if (
       profile?.username &&
-      value === profile.username
+      value.toLowerCase() ===
+        profile.username.toLowerCase()
     ) {
-      setUsernameStatus('available');
+      setUsernameStatus(
+        'available',
+      );
       return;
     }
 
@@ -293,7 +502,10 @@ export function ProfileCompletionForm({
             }
 
             if (!response.ok) {
-              setUsernameStatus('error');
+              setUsernameStatus(
+                'error',
+              );
+
               return;
             }
 
@@ -317,7 +529,9 @@ export function ProfileCompletionForm({
               requestId ===
               usernameRequestRef.current
             ) {
-              setUsernameStatus('error');
+              setUsernameStatus(
+                'error',
+              );
             }
           }
         },
@@ -325,7 +539,9 @@ export function ProfileCompletionForm({
       );
 
     return () => {
-      window.clearTimeout(timeout);
+      window.clearTimeout(
+        timeout,
+      );
     };
   }, [
     username,
@@ -333,9 +549,9 @@ export function ProfileCompletionForm({
   ]);
 
   /*
-   * ----------------------------------------------------------
+   * --------------------------------------------------------
    * Avatar upload
-   * ----------------------------------------------------------
+   * --------------------------------------------------------
    */
 
   async function handleAvatarChange(
@@ -360,24 +576,30 @@ export function ProfileCompletionForm({
       );
 
       event.target.value = '';
+
       return;
     }
 
     if (
-      file.size > MAX_AVATAR_SIZE
+      file.size >
+      MAX_AVATAR_SIZE
     ) {
       setAvatarError(
         'Your profile picture must be 2 MB or smaller.',
       );
 
       event.target.value = '';
+
       return;
     }
 
     const previewUrl =
       URL.createObjectURL(file);
 
-    setAvatarPreview(previewUrl);
+    setAvatarPreview(
+      previewUrl,
+    );
+
     setAvatarUploading(true);
 
     try {
@@ -416,15 +638,13 @@ export function ProfileCompletionForm({
       }
 
       /*
-       * The API has already persisted this URL
-       * to user_profile.avatar_url.
+       * The avatar API has already
+       * persisted this URL.
        */
-      setAvatarUrl(result.avatarUrl);
+      setAvatarUrl(
+        result.avatarUrl,
+      );
 
-      /*
-       * We no longer need the temporary
-       * browser preview after a successful upload.
-       */
       setAvatarPreview(null);
     } catch {
       setAvatarPreview(null);
@@ -443,9 +663,9 @@ export function ProfileCompletionForm({
   }
 
   /*
-   * ----------------------------------------------------------
-   * Country → currency
-   * ----------------------------------------------------------
+   * --------------------------------------------------------
+   * Country → currency + phone country
+   * --------------------------------------------------------
    */
 
   function handleCountryChange(
@@ -463,25 +683,55 @@ export function ProfileCompletionForm({
       },
     );
 
+    /*
+     * IMPORTANT:
+     *
+     * Use nextCountry directly.
+     * Do not use the previous country's
+     * currency here.
+     */
     if (
-      !currencyTouched &&
-      selectedCountryCurrency
+      !currencyTouched
     ) {
-      setValue(
-        'currency',
-        selectedCountryCurrency,
-        {
-          shouldValidate: true,
-          shouldDirty: true,
-        },
+      const nextCurrency =
+        getCountryCurrency(
+          nextCountry,
+        );
+
+      if (nextCurrency) {
+        setValue(
+          'currency',
+          nextCurrency,
+          {
+            shouldValidate:
+              true,
+            shouldDirty: true,
+          },
+        );
+      }
+    }
+
+    /*
+     * Keep phone country aligned with
+     * profile country until the user
+     * explicitly chooses a phone country.
+     */
+    if (
+      !phoneCountryTouched &&
+      isPhoneCountryCode(
+        nextCountry,
+      )
+    ) {
+      setPhoneCountry(
+        nextCountry,
       );
     }
   }
 
   /*
-   * ----------------------------------------------------------
-   * Profile submission
-   * ----------------------------------------------------------
+   * --------------------------------------------------------
+   * Submission
+   * --------------------------------------------------------
    */
 
   const onSubmit:
@@ -489,6 +739,10 @@ export function ProfileCompletionForm({
     async (values) => {
       setServerError(null);
 
+      /*
+       * Username must have a confirmed
+       * semantic availability state.
+       */
       if (
         usernameStatus !==
         'available'
@@ -500,25 +754,158 @@ export function ProfileCompletionForm({
         return;
       }
 
-      const result:
-        ProfileCompletionState =
-        await completeProfileAction(
-          values,
-        );
+      let normalizedMobile =
+        '';
 
-      if (!result.success) {
-        setServerError(
-          result.error ??
-            'Unable to save your profile.',
-        );
+      /*
+       * Normalize the mobile number to
+       * E.164 before sending it to the
+       * server action.
+       */
+      if (
+        values.mobileNumber?.trim()
+      ) {
+        try {
+          const parsed =
+            parsePhoneNumberFromString(
+              values.mobileNumber.trim(),
+              phoneCountry,
+            );
 
-        return;
+          if (
+            !parsed ||
+            !parsed.isValid()
+          ) {
+            setServerError(
+              'Please enter a valid mobile number.',
+            );
+
+            return;
+          }
+
+          normalizedMobile =
+            parsed.number;
+        } catch {
+          setServerError(
+            'Please enter a valid mobile number.',
+          );
+
+          return;
+        }
       }
 
-      router.push(
-        `/profile/complete/success?intent=${intent}`,
-      );
+      const submitValues:
+        ProfileFormValues = {
+        ...values,
+        mobileNumber:
+          normalizedMobile,
+      };
+
+      try {
+        /*
+         * IMPORTANT:
+         *
+         * completeProfileAction currently
+         * accepts exactly ONE argument:
+         *
+         * completeProfileAction(values)
+         */
+        const result:
+          ProfileCompletionState =
+          await completeProfileAction(
+            submitValues,
+          );
+
+        if (!result.success) {
+          setServerError(
+            result.error ??
+              'Unable to save your profile.',
+          );
+
+          return;
+        }
+
+        /*
+         * Stay on this page.
+         *
+         * The old success page is no longer
+         * part of the completion flow.
+         */
+        setSubmitted(true);
+      } catch (error) {
+        console.error(
+          'Profile completion failed:',
+          error,
+        );
+
+        setServerError(
+          'Something went wrong while saving your profile.',
+        );
+      }
     };
+
+  /*
+   * --------------------------------------------------------
+   * Successful submission
+   * --------------------------------------------------------
+   */
+
+  if (submitted) {
+    return (
+      <div className="space-y-12">
+        <header className="max-w-2xl">
+          <p className="mb-5 text-[11px] font-medium uppercase tracking-[0.28em] text-emerald-600 dark:text-emerald-400">
+            Profile complete
+          </p>
+
+          <h1 className="text-4xl font-semibold leading-[1.02] tracking-[-0.055em] sm:text-5xl lg:text-6xl">
+            You&apos;re all set.
+          </h1>
+
+          <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
+            Your profile has been saved.
+            {intent === 'join'
+              ? ' The next step is to choose your Urge membership.'
+              : ' You can now start your Urge journey.'}
+          </p>
+        </header>
+
+        <div className="border-t border-border pt-8">
+          {intent === 'join' ? (
+            <button
+              type="button"
+              onClick={() =>
+                router.push(
+                  '/checkout?offering=urge-membership',
+                )
+              }
+              className="h-14 w-full max-w-2xl rounded-md bg-primary px-6 text-base font-medium text-primary-foreground transition-opacity hover:opacity-90 sm:h-16 sm:text-lg"
+            >
+              Continue to checkout
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() =>
+                router.push(
+                  '/program/welcome?intent=trial',
+                )
+              }
+              className="h-14 w-full max-w-2xl rounded-md bg-primary px-6 text-base font-medium text-primary-foreground transition-opacity hover:opacity-90 sm:h-16 sm:text-lg"
+            >
+              Continue to Urge
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  /*
+   * --------------------------------------------------------
+   * Form
+   * --------------------------------------------------------
+   */
 
   return (
     <div className="space-y-12">
@@ -607,8 +994,7 @@ export function ProfileCompletionForm({
             <span className="mt-3 block text-sm font-medium">
               {avatarUploading
                 ? 'Uploading…'
-                : avatarUrl ||
-                    avatarPreview
+                : avatarUrl
                   ? 'Change photo'
                   : 'Add a photo'}
             </span>
@@ -662,7 +1048,7 @@ export function ProfileCompletionForm({
 
             {usernameStatus ===
               'available' && (
-              <p className="text-primary">
+              <p className="text-emerald-600 dark:text-emerald-400">
                 Username is available.
               </p>
             )}
@@ -929,15 +1315,50 @@ export function ProfileCompletionForm({
             notifications.
           </p>
 
-          <input
-            id="mobileNumber"
-            type="tel"
-            placeholder="+91 98765 43210"
-            autoComplete="tel"
-            disabled={isSubmitting}
-            {...register('mobileNumber')}
-            className="h-14 w-full max-w-2xl rounded-md border border-input bg-background px-4 text-base outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-16 sm:text-lg"
-          />
+          <div className="flex w-full max-w-2xl gap-3">
+            <div className="w-36 shrink-0">
+              <select
+                aria-label="Mobile country"
+                value={phoneCountry}
+                onChange={(event) => {
+                  setPhoneCountry(
+                    event.target
+                      .value as CountryCode,
+                  );
+
+                  setPhoneCountryTouched(
+                    true,
+                  );
+                }}
+                disabled={isSubmitting}
+                className="h-14 w-full rounded-md border border-input bg-background px-3 text-base outline-none focus:ring-2 focus:ring-ring sm:h-16 sm:text-lg"
+              >
+                {PHONE_COUNTRY_OPTIONS.map(
+                  (option) => (
+                    <option
+                      key={option.code}
+                      value={option.code}
+                    >
+                      {option.code}{' '}
+                      {option.callingCode}
+                    </option>
+                  ),
+                )}
+              </select>
+            </div>
+
+            <input
+              id="mobileNumber"
+              type="tel"
+              placeholder="98765 43210"
+              autoComplete="tel"
+              disabled={isSubmitting}
+              {...register(
+                'mobileNumber',
+              )}
+              className="h-14 min-w-0 flex-1 rounded-md border border-input bg-background px-4 text-base outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-16 sm:text-lg"
+            />
+          </div>
 
           {errors.mobileNumber && (
             <p className="mt-2 text-xs text-destructive">
