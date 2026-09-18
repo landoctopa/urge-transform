@@ -43,7 +43,7 @@ export default async function ProgramWelcomePage() {
 
             <div className="mt-10">
               <Link
-                href="/program/mission/1"
+                href="/program/mission/mission-1"
                 className="inline-flex h-14 items-center justify-center rounded-md bg-primary px-7 text-base font-medium text-primary-foreground transition-opacity hover:opacity-90 sm:h-16 sm:px-8 sm:text-lg"
               >
                 Start Mission 1
