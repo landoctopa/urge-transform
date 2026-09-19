@@ -1,7 +1,6 @@
-import { requireCurrentUser } from '@/lib/auth';
 import { UserHydrator } from '@/components/auth/UserHydrator';
-
-import { PlatformShell } from '@/components/platform/PlatformShell';
+import { PlatformShell } from '@/components/layout/PlatformShell';
+import { requireCurrentUser } from '@/lib/auth/currentUser';
 
 export default async function PlatformLayout({
   children,
@@ -11,9 +10,7 @@ export default async function PlatformLayout({
   const currentUser = await requireCurrentUser();
 
   return (
-    <UserHydrator
-      profile={currentUser.profile}
-    >
+    <UserHydrator profile={currentUser.profile}>
       <PlatformShell>
         {children}
       </PlatformShell>
