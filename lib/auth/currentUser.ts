@@ -57,7 +57,7 @@ export async function requireCurrentUser(): Promise<CurrentUser> {
     await getCurrentUser();
 
   if (!currentUser) {
-    redirect('/register');
+    redirect('/login');
   }
 
   return currentUser;

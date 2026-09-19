@@ -16,13 +16,18 @@ export interface RegisterState {
   requiresConfirmation: boolean;
 }
 
-export interface LoginState {
-  error: string | null;
-  success: boolean;
-}
-
 export const initialRegisterState: RegisterState = {
   error: null,
   success: false,
   requiresConfirmation: false,
 };
+
+export interface LoginState {
+  error: string | null;
+  success: boolean;
+}
+export const initialLoginState: LoginState = {
+  error: null,
+  success: false,
+};
+
