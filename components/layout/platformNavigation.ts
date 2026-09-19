@@ -19,7 +19,7 @@ export interface PlatformNavItem {
 export const PLATFORM_NAV_ITEMS: PlatformNavItem[] = [
   {
     label: 'Home',
-    href: '/home',
+    href: '/dashboard',
     icon: House,
     exact: true,
   },
