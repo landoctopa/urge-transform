@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Urge Platform Layout Playground</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+  </style>
+</head>
+
+<body class="bg-white text-neutral-950">
+
+  <!-- ========================================================= -->
+  <!-- PLAYGROUND WRAPPER                                        -->
+  <!-- ========================================================= -->
+
+  <div class="min-h-screen bg-neutral-50">
+
+    <!-- ======================================================= -->
+    <!-- SECTION LABEL                                            -->
+    <!-- ======================================================= -->
+
+    <div class="mx-auto max-w-[1440px] px-6 py-8 sm:px-8 lg:px-10">
+
+      <div class="mb-10">
+        <p class="text-xs font-bold uppercase tracking-[0.25em] text-orange-600">
+          Urge Platform
+        </p>
+
+        <h1 class="mt-4 text-5xl font-bold leading-[0.95] tracking-[-0.055em] sm:text-6xl">
+          Layout Playground
+        </h1>
+
+        <p class="mt-6 max-w-3xl text-xl font-medium leading-8 text-neutral-500">
+          The left sidebar is universal. Everything inside the page area
+          is controlled by the individual experience.
+        </p>
+      </div>
+
+
+      <!-- ===================================================== -->
+      <!-- MOCKUP 01 — STANDARD PLATFORM                         -->
+      <!-- ===================================================== -->
+
+      <section class="mb-20">
+
+        <div class="mb-5">
+          <p class="text-xs font-bold uppercase tracking-[0.2em] text-orange-600">
+            01 — Standard Platform
+          </p>
+
+          <h2 class="mt-2 text-3xl font-bold tracking-tight">
+            Main content only
+          </h2>
+
+          <p class="mt-2 text-base leading-7 text-neutral-500">
+            Useful for Home, Profile, Network and simple pages.
+          </p>
+        </div>
+
+
+        <div class="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+
+          <div class="flex min-h-[760px]">
+
+            <!-- GLOBAL SIDEBAR -->
+            <aside class="hidden w-64 shrink-0 border-r border-neutral-200 bg-white lg:flex lg:flex-col">
+
+              <div class="flex h-16 items-center border-b border-neutral-200 px-6">
+                <div class="text-2xl font-bold tracking-tight">
+                  urge
+                </div>
+              </div>
+
+              <nav class="flex-1 space-y-1 p-4">
+
+                <a href="#"
+                   class="flex h-12 items-center gap-3 rounded-lg bg-neutral-100 px-3 text-base font-medium">
+                  <span class="text-lg">⌂</span>
+                  Home
+                </a>
+
+                <a href="#"
+                   class="flex h-12 items-center gap-3 rounded-lg px-3 text-base text-neutral-500 hover:bg-neutral-50">
+                  <span class="text-lg">▣</span>
+                  Program
+                </a>
+
+                <a href="#"
+                   class="flex h-12 items-center gap-3 rounded-lg px-3 text-base text-neutral-500 hover:bg-neutral-50">
+                  <span class="text-lg">♧</span>
+                  Community
+                </a>
+
+                <a href="#"
+                   class="flex h-12 items-center gap-3 rounded-lg px-3 text-base text-neutral-500 hover:bg-neutral-50">
+                  <span class="text-lg">⌘</span>
+                  Network
+                </a>
+
+                <a href="#"
+                   class="flex h-12 items-center gap-3 rounded-lg px-3 text-base text-neutral-500 hover:bg-neutral-50">
+                  <span class="text-lg">□</span>
+                  Events
+                </a>
+
+              </nav>
+
+              <div class="border-t border-neutral-200 p-4">
+
+                <div class="flex h-12 items-center gap-3 rounded-lg px-3">
+
+                  <div class="h-8 w-8 overflow-hidden rounded-full bg-neutral-200">
+                    <img
+                      src="https://i.pravatar.cc/100?img=12"
+                      alt=""
+                      class="h-full w-full object-cover"
+                    />
+                  </div>
+
+                  <span class="truncate text-base">
+                    Amit
+                  </span>
+
+                </div>
+
+              </div>
+
+            </aside>
+
+
+            <!-- MAIN -->
+            <main class="min-w-0 flex-1">
+
+              <div class="mx-auto w-full max-w-7xl px-6 py-12 sm:px-10 lg:px-14">
+
+                <div class="max-w-5xl">
+
+                  <p class="text-xs font-bold uppercase tracking-[0.25em] text-orange-600">
+                    Home
+                  </p>
+
+                  <h2 class="mt-6 text-5xl font-bold leading-[0.95] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
+                    Welcome back.
+                  </h2>
+
+                  <p class="mt-8 max-w-3xl text-xl font-medium leading-8 text-neutral-500">
+                    Pick up where you left off, explore what's happening
+                    around Urge, or continue building momentum.
+                  </p>
+
+                  <div class="mt-12 grid gap-6 md:grid-cols-2">
+
+                    <div class="rounded-2xl border border-neutral-200 p-6">
+                      <p class="text-xs font-bold uppercase tracking-[0.2em] text-neutral-400">
+                        Continue
+                      </p>
+
+                      <h3 class="mt-4 text-2xl font-bold">
+                        Getting Started
+                      </h3>
+
+                      <p class="mt-3 text-base leading-7 text-neutral-500">
+                        Continue your current mission from where you stopped.
+                      </p>
+
+                      <button class="mt-6 rounded-lg bg-orange-600 px-5 py-3 text-base font-medium text-white">
+                        Continue
+                      </button>
+                    </div>
+
+
+                    <div class="rounded-2xl border border-neutral-200 p-6">
+
+                      <p class="text-xs font-bold uppercase tracking-[0.2em] text-neutral-400">
+                        Community
+                      </p>
+
+                      <h3 class="mt-4 text-2xl font-bold">
+                        See what's happening
+                      </h3>
+
+                      <p class="mt-3 text-base leading-7 text-neutral-500">
+                        Discover conversations, people and upcoming events.
+                      </p>
+
+                      <button class="mt-6 rounded-lg border border-neutral-300 px-5 py-3 text-base font-medium">
+                        Explore
+                      </button>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </main>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+
+      <!-- ===================================================== -->
+      <!-- MOCKUP 02 — PROGRAM                                    -->
+      <!-- ===================================================== -->
+
+      <section class="mb-20">
+
+        <div class="mb-5">
+          <p class="text-xs font-bold uppercase tracking-[0.2em] text-orange-600">
+            02 — Program
+          </p>
+
+          <h2 class="mt-2 text-3xl font-bold tracking-tight">
+            Main content + contextual rail
+          </h2>
+
+          <p class="mt-2 text-base leading-7 text-neutral-500">
+            The page decides what belongs in the right rail.
+          </p>
+        </div>
+
+
+        <div class="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+
+          <div class="flex min-h-[850px]">
+
+            <!-- SIDEBAR -->
+            <aside class="hidden w-64 shrink-0 border-r border-neutral-200 bg-white lg:flex lg:flex-col">
+
+              <div class="flex h-16 items-center border-b border-neutral-200 px-6">
+                <div class="text-2xl font-bold tracking-tight">
+                  urge
+                </div>
+              </div>
+
+              <nav class="flex-1 space-y-1 p-4">
+
+                <a href="#"
+                   class="flex h-12 items-center gap-3 rounded-lg px-3 text-base text-neutral-500">
+                  <span>⌂</span>
+                  Home
+                </a>
+
+                <a href="#"
+                   class="flex h-12 items-center gap-3 rounded-lg bg-neutral-100 px-3 text-base font-medium">
+                  <span>▣</span>
+                  Program
+                </a>
+
+                <a href="#"
+                   class="flex h-12 items-center gap-3 rounded-lg px-3 text-base text-neutral-500">
+                  <span>♧</span>
+                  Community
+                </a>
+
+                <a href="#"
+                   class="flex h-12 items-center gap-3 rounded-lg px-3 text-base text-neutral-500">
+                  <span>⌘</span>
+                  Network
+                </a>
+
+                <a href="#"
+                   class="flex h-12 items-center gap-3 rounded-lg px-3 text-base text-neutral-500">
+                  <span>□</span>
+                  Events
+                </a>
+
+              </nav>
+
+              <div class="border-t border-neutral-200 p-4">
+
+                <div class="flex h-12 items-center gap-3 rounded-lg px-3">
+
+                  <img
+                    src="https://i.pravatar.cc/100?img=12"
+                    alt=""
+                    class="h-8 w-8 rounded-full object-cover"
+                  />
+
+                  <span class="truncate text-base">
+                    Amit
+                  </span>
+
+                </div>
+
+              </div>
+
+            </aside>
+
+
+            <!-- PAGE -->
+            <main class="min-w-0 flex-1">
+
+              <div class="mx-auto w-full max-w-7xl px-6 py-12 sm:px-8 lg:px-12">
+
+                <div class="grid gap-12 xl:grid-cols-[minmax(0,1fr)_288px]">
+
+                  <!-- CONTENT -->
+                  <div class="min-w-0">
+
+                    <div class="mb-10">
+
+                      <p class="text-xs font-bold uppercase tracking-[0.25em] text-orange-600">
+                        Mission 01 · Getting Started
+                      </p>
+
+                      <h2 class="mt-6 text-5xl font-bold leading-[0.95] tracking-[-0.055em] sm:text-6xl">
+                        Start before
+                        <br />
+                        you are ready.
+                      </h2>
+
+                    </div>
+
+
+                    <article class="prose prose-xl max-w-3xl">
+
+                      <p>
+                        Most people think starting a business begins
+                        with a great idea.
+                      </p>
+
+                      <p>
+                        It doesn't.
+                      </p>
+
+                      <p>
+                        It begins when you notice something that could
+                        be better and become curious enough to investigate
+                        what is actually happening.
+                      </p>
+
+                      <h2>
+                        The goal isn't certainty.
+                      </h2>
+
+                      <p>
+                        The goal is to learn something real. You are going
+                        to investigate, act, observe and reflect.
+                      </p>
+
+                    </article>
+
+
+                    <div class="mt-12 flex items-center gap-3">
+
+                      <button class="rounded-lg bg-orange-600 px-6 py-3 text-base font-medium text-white">
+                        Start
+                      </button>
+
+                      <button class="rounded-lg border border-neutral-300 px-6 py-3 text-base font-medium">
+                        Save for later
+                      </button>
+
+                    </div>
+
+                  </div>
+
+
+                  <!-- CONTEXT RAIL -->
+                  <aside class="hidden xl:block">
+
+                    <div class="sticky top-8 space-y-5">
+
+                      <div class="rounded-2xl border border-neutral-200 p-5">
+
+                        <p class="text-xs font-bold uppercase tracking-[0.2em] text-neutral-400">
+                          Your progress
+                        </p>
+
+                        <div class="mt-4 flex items-center justify-between">
+
+                          <span class="text-base font-medium">
+                            Mission 1
+                          </span>
+
+                          <span class="text-sm text-neutral-500">
+                            4 / 10
+                          </span>
+
+                        </div>
+
+                        <div class="mt-3 h-2 overflow-hidden rounded-full bg-neutral-100">
+
+                          <div class="h-full w-[40%] rounded-full bg-orange-600"></div>
+
+                        </div>
+
+                      </div>
+
+
+                      <div class="rounded-2xl border border-neutral-200 p-5">
+
+                        <p class="text-xs font-bold uppercase tracking-[0.2em] text-neutral-400">
+                          Resources
+                        </p>
+
+                        <div class="mt-4 space-y-4">
+
+                          <a href="#" class="block">
+                            <p class="text-base font-medium">
+                              Founder story
+                            </p>
+
+                            <p class="mt-1 text-sm leading-6 text-neutral-500">
+                              How someone else started before they felt ready.
+                            </p>
+                          </a>
+
+                          <a href="#" class="block">
+                            <p class="text-base font-medium">
+                              Useful worksheet
+                            </p>
+
+                            <p class="mt-1 text-sm leading-6 text-neutral-500">
+                              A simple exercise for getting started.
+                            </p>
+                          </a>
+
+                        </div>
+
+                      </div>
+
+
+                      <div class="rounded-2xl bg-neutral-100 p-5">
+
+                        <p class="text-xs font-bold uppercase tracking-[0.2em] text-neutral-400">
+                          Need help?
+                        </p>
+
+                        <p class="mt-3 text-base leading-7">
+                          Ask the Urge community about what you're working on.
+                        </p>
+
+                        <button class="mt-5 text-base font-medium text-orange-600">
+                          Ask a question →
+                        </button>
+
+                      </div>
+
+                    </div>
+
+                  </aside>
+
+                </div>
+
+              </div>
+
+            </main>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+
+      <!-- ===================================================== -->
+      <!-- MOCKUP 03 — COMMUNITY                                  -->
+      <!-- ===================================================== -->
+
+      <section class="mb-20">
+
+        <div class="mb-5">
+
+          <p class="text-xs font-bold uppercase tracking-[0.2em] text-orange-600">
+            03 — Community
+          </p>
+
+          <h2 class="mt-2 text-3xl font-bold tracking-tight">
+            Feed + community insights
+          </h2>
+
+          <p class="mt-2 text-base leading-7 text-neutral-500">
+            Same shell. Completely different interior experience.
+          </p>
+
+        </div>
+
+
+        <div class="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+
+          <div class="flex min-h-[850px]">
+
+            <!-- SIDEBAR -->
+            <aside class="hidden w-64 shrink-0 border-r border-neutral-200 bg-white lg:flex lg:flex-col">
+
+              <div class="flex h-16 items-center border-b border-neutral-200 px-6">
+                <div class="text-2xl font-bold tracking-tight">
+                  urge
+                </div>
+              </div>
+
+              <nav class="flex-1 space-y-1 p-4">
+
+                <a href="#"
+                   class="flex h-12 items-center gap-3 rounded-lg px-3 text-base text-neutral-500">
+                  <span>⌂</span>
+                  Home
+                </a>
+
+                <a href="#"
+                   class="flex h-12 items-center gap-3 rounded-lg px-3 text-base text-neutral-500">
+                  <span>▣</span>
+                  Program
+                </a>
+
+                <a href="#"
+                   class="flex h-12 items-center gap-3 rounded-lg bg-neutral-100 px-3 text-base font-medium">
+                  <span>♧</span>
+                  Community
+                </a>
+
+                <a href="#"
+                   class="flex h-12 items-center gap-3 rounded-lg px-3 text-base text-neutral-500">
+                  <span>⌘</span>
+                  Network
+                </a>
+
+                <a href="#"
+                   class="flex h-12 items-center gap-3 rounded-lg px-3 text-base text-neutral-500">
+                  <span>□</span>
+                  Events
+                </a>
+
+              </nav>
+
+              <div class="border-t border-neutral-200 p-4">
+
+                <div class="flex h-12 items-center gap-3 rounded-lg px-3">
+
+                  <img
+                    src="https://i.pravatar.cc/100?img=12"
+                    alt=""
+                    class="h-8 w-8 rounded-full object-cover"
+                  />
+
+                  <span class="truncate text-base">
+                    Amit
+                  </span>
+
+                </div>
+
+              </div>
+
+            </aside>
+
+
+            <!-- COMMUNITY PAGE -->
+            <main class="min-w-0 flex-1">
+
+              <div class="mx-auto w-full max-w-7xl px-6 py-12 sm:px-8 lg:px-12">
+
+                <div class="grid gap-12 xl:grid-cols-[minmax(0,1fr)_288px]">
+
+                  <!-- FEED -->
+                  <div class="min-w-0 max-w-3xl">
+
+                    <p class="text-xs font-bold uppercase tracking-[0.25em] text-orange-600">
+                      Community
+                    </p>
+
+                    <h2 class="mt-6 text-5xl font-bold leading-[0.95] tracking-[-0.055em] sm:text-6xl">
+                      What people are
+                      <br />
+                      figuring out.
+                    </h2>
+
+
+                    <!-- COMPOSER -->
+                    <div class="mt-10 rounded-2xl border border-neutral-200 p-5">
+
+                      <p class="text-lg font-medium">
+                        What are you working on?
+                      </p>
+
+                      <div class="mt-4 rounded-xl bg-neutral-50 p-4 text-base text-neutral-400">
+                        Start a conversation...
+                      </div>
+
+                    </div>
+
+
+                    <!-- POST -->
+                    <article class="mt-6 border-b border-neutral-200 pb-8">
+
+                      <div class="flex items-center gap-3">
+
+                        <img
+                          src="https://i.pravatar.cc/100?img=32"
+                          class="h-10 w-10 rounded-full"
+                          alt=""
+                        />
+
+                        <div>
+                          <p class="text-base font-semibold">
+                            Maya
+                          </p>
+
+                          <p class="text-sm text-neutral-500">
+                            28 minutes ago
+                          </p>
+                        </div>
+
+                      </div>
+
+                      <div class="mt-5">
+
+                        <p class="text-xl leading-8">
+                          I spoke to three people about the problem
+                          I've been thinking about and learned that
+                          I had completely misunderstood what bothered them.
+                        </p>
+
+                      </div>
+
+                      <div class="mt-5 flex gap-5 text-sm text-neutral-500">
+                        <button>Reply</button>
+                        <button>Like</button>
+                        <button>Save</button>
+                      </div>
+
+                    </article>
+
+
+                    <!-- POST -->
+                    <article class="mt-8 border-b border-neutral-200 pb-8">
+
+                      <div class="flex items-center gap-3">
+
+                        <img
+                          src="https://i.pravatar.cc/100?img=45"
+                          class="h-10 w-10 rounded-full"
+                          alt=""
+                        />
+
+                        <div>
+                          <p class="text-base font-semibold">
+                            Rohan
+                          </p>
+
+                          <p class="text-sm text-neutral-500">
+                            2 hours ago
+                          </p>
+                        </div>
+
+                      </div>
+
+                      <div class="mt-5">
+
+                        <p class="text-xl leading-8">
+                          What is the smallest version of the thing
+                          you're trying to build that someone would
+                          actually pay for?
+                        </p>
+
+                      </div>
+
+                      <div class="mt-5 flex gap-5 text-sm text-neutral-500">
+                        <button>Reply</button>
+                        <button>Like</button>
+                        <button>Save</button>
+                      </div>
+
+                    </article>
+
+                  </div>
+
+
+                  <!-- INSIGHTS -->
+                  <aside class="hidden xl:block">
+
+                    <div class="sticky top-8 space-y-5">
+
+                      <div class="rounded-2xl border border-neutral-200 p-5">
+
+                        <p class="text-xs font-bold uppercase tracking-[0.2em] text-neutral-400">
+                          Community insights
+                        </p>
+
+                        <div class="mt-5 space-y-5">
+
+                          <div>
+                            <p class="text-2xl font-bold">
+                              128
+                            </p>
+
+                            <p class="text-sm text-neutral-500">
+                              people active this week
+                            </p>
+                          </div>
+
+                          <div>
+                            <p class="text-2xl font-bold">
+                              24
+                            </p>
+
+                            <p class="text-sm text-neutral-500">
+                              conversations started
+                            </p>
+                          </div>
+
+                          <div>
+                            <p class="text-2xl font-bold">
+                              9
+                            </p>
+
+                            <p class="text-sm text-neutral-500">
+                              events coming up
+                            </p>
+                          </div>
+
+                        </div>
+
+                      </div>
+
+
+                      <div class="rounded-2xl border border-neutral-200 p-5">
+
+                        <p class="text-xs font-bold uppercase tracking-[0.2em] text-neutral-400">
+                          Happening now
+                        </p>
+
+                        <div class="mt-4 space-y-4">
+
+                          <a href="#" class="block">
+                            <p class="text-base font-semibold">
+                              How are you finding your first customers?
+                            </p>
+
+                            <p class="mt-1 text-sm text-neutral-500">
+                              18 replies
+                            </p>
+                          </a>
+
+                          <a href="#" class="block">
+                            <p class="text-base font-semibold">
+                              Share what you're testing this week
+                            </p>
+
+                            <p class="mt-1 text-sm text-neutral-500">
+                              11 replies
+                            </p>
+                          </a>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  </aside>
+
+                </div>
+
+              </div>
+
+            </main>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+
+      <!-- ===================================================== -->
+      <!-- MOCKUP 04 — FOCUSED DETAIL                             -->
+      <!-- ===================================================== -->
+
+      <section class="mb-10">
+
+        <div class="mb-5">
+
+          <p class="text-xs font-bold uppercase tracking-[0.2em] text-orange-600">
+            04 — Focused Detail
+          </p>
+
+          <h2 class="mt-2 text-3xl font-bold tracking-tight">
+            Main content without a rail
+          </h2>
+
+          <p class="mt-2 text-base leading-7 text-neutral-500">
+            Useful when the content itself deserves the whole stage.
+          </p>
+
+        </div>
+
+
+        <div class="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+
+          <div class="flex min-h-[850px]">
+
+            <!-- SIDEBAR -->
+            <aside class="hidden w-64 shrink-0 border-r border-neutral-200 bg-white lg:flex lg:flex-col">
+
+              <div class="flex h-16 items-center border-b border-neutral-200 px-6">
+                <div class="text-2xl font-bold tracking-tight">
+                  urge
+                </div>
+              </div>
+
+              <nav class="flex-1 space-y-1 p-4">
+
+                <a href="#"
+                   class="flex h-12 items-center gap-3 rounded-lg px-3 text-base text-neutral-500">
+                  <span>⌂</span>
+                  Home
+                </a>
+
+                <a href="#"
+                   class="flex h-12 items-center gap-3 rounded-lg px-3 text-base text-neutral-500">
+                  <span>▣</span>
+                  Program
+                </a>
+
+                <a href="#"
+                   class="flex h-12 items-center gap-3 rounded-lg px-3 text-base text-neutral-500">
+                  <span>♧</span>
+                  Community
+                </a>
+
+                <a href="#"
+                   class="flex h-12 items-center gap-3 rounded-lg px-3 text-base text-neutral-500">
+                  <span>⌘</span>
+                  Network
+                </a>
+
+                <a href="#"
+                   class="flex h-12 items-center gap-3 rounded-lg px-3 text-base text-neutral-500">
+                  <span>□</span>
+                  Events
+                </a>
+
+              </nav>
+
+            </aside>
+
+
+            <!-- CONTENT -->
+            <main class="min-w-0 flex-1">
+
+              <div class="mx-auto w-full max-w-7xl px-6 py-16 sm:px-10 lg:px-16">
+
+                <div class="max-w-4xl">
+
+                  <p class="text-xs font-bold uppercase tracking-[0.25em] text-orange-600">
+                    Resource
+                  </p>
+
+                  <h2 class="mt-6 text-5xl font-bold leading-[0.95] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
+                    Foundations of a
+                    <br />
+                    studio.
+                  </h2>
+
+
+                  <article class="prose prose-xl mt-12 max-w-3xl">
+
+                    <p>
+                      A useful resource doesn't need to tell people
+                      exactly what to do.
+                    </p>
+
+                    <p>
+                      Sometimes its job is simply to help them see
+                      something differently.
+                    </p>
+
+                    <h2>
+                      Start with what is real.
+                    </h2>
+
+                    <p>
+                      Good work begins by paying attention to what
+                      already exists: what people do, what they struggle
+                      with and where there is friction.
+                    </p>
+
+                    <blockquote>
+                      <p>
+                        Don't build the answer before understanding
+                        the question.
+                      </p>
+                    </blockquote>
+
+                    <p>
+                      Use what you learn to decide what deserves your
+                      attention next.
+                    </p>
+
+                  </article>
+
+                </div>
+
+              </div>
+
+            </main>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  </div>
+
+</body>
+</html>
