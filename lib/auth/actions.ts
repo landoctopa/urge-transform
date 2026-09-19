@@ -1,11 +1,8 @@
 'use server';
-
-import {
-  registerUser,
-  type RegistrationIntent,
-} from './register';
-
-import type { RegisterState } from './types';
+import { redirect } from 'next/navigation';
+import { registerUser, type RegistrationIntent} from './register';
+import {loginUser, type LoginInput} from './login';
+import type { RegisterState, LoginState } from './types';
 
 export async function registerAction(
   _prevState: RegisterState,
@@ -68,4 +65,66 @@ export async function registerAction(
       requiresConfirmation: false,
     };
   }
+}
+
+function getSafeRedirect(
+  value: string,
+) {
+  if (
+    !value ||
+    !value.startsWith('/') ||
+    value.startsWith('//')
+  ) {
+    return '/dashboard';
+  }
+
+  return value;
+}
+
+export async function loginAction(
+  _prevState: LoginState,
+  formData: FormData,
+): Promise<LoginState> {
+  const email = String(
+    formData.get('email') ?? '',
+  ).trim();
+
+  const password = String(
+    formData.get('password') ?? '',
+  );
+
+  const next = getSafeRedirect(
+    String(
+      formData.get('next') ?? '',
+    ),
+  );
+
+  if (!email || !password) {
+    return {
+      error: 'Please enter your email and password.',
+      success: false,
+    };
+  }
+
+  try {
+    await loginUser({
+      email,
+      password,
+    });
+  } catch (error) {
+    console.error(
+      'Login failed:',
+      error,
+    );
+
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Something went wrong while signing you in.',
+      success: false,
+    };
+  }
+
+  redirect(next);
 }
