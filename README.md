@@ -1,145 +1,186 @@
-# Fix onboarding issues
-1. Program hydration error : This we have resolved
-2. Avatar upload — storage RLS - have to do
-3. Issues in ProfileCompletionForm
-    - Currency preselection
-    - Username availability: This should be a semantic success state, not the Urge brand color.
-    - Mobile number : 
-    - Display success message after the form is submitted and then take users to checkout directly instead of going through success page.
-    - offer pricing -> Quarterly should be the default
-4. remove app/(platform)/profile/complete/success/page.tsx
-5. Welcome → Mission 1: fixed
-6. Password show/hide alignment in app/register/page.tsx
-7. stringified metadata (rpc check)
 
-## Relevant files
-1. components/auth/ProfileCompletionForm.tsx (attached)
-2. app/register/page.tsx
-```tsx
-import Link from 'next/link';
 
-import { RegisterForm } from '@/components/auth/RegisterForm';
 
-export default function RegisterPage() {
-  return (
-    <main className="min-h-screen bg-background">
-      <div className="mx-auto flex min-h-screen w-full max-w-7xl">
-        <section className="hidden flex-1 border-r border-border lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16">
-          <Link
-            href="/"
-            className="text-xl font-medium tracking-[-0.04em]"
-          >
-            urge
-          </Link>
 
-          <div className="max-w-xl pb-8">
-            <p className="mb-6 text-xs font-semibold uppercase tracking-[0.3em] text-primary">
-              Start here
-            </p>
+ok now the time has come to think about missions, the exciting part. I have put down my thought. What do you think and how will be go about implementing it. Lets not go into code but think this through first. I have also attached mission.ts and our core program idea from earlier.
 
-            <h2 className="text-5xl font-medium leading-[0.95] tracking-[-0.06em] xl:text-6xl">
-              You don’t need to be ready.
-            </h2>
+## Missions
 
-            <p className="mt-8 max-w-md text-base leading-7 text-muted-foreground">
-              You just need to be willing to move.
-            </p>
-          </div>
+## What is the user journey we have built so far
 
-          <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Urge
-          </p>
-        </section>
+- `m1-situation` -> Starting point
+- `m1-q1-complication` -> Barriers and fears
+- `m1-q1-motivation` -> Motivation
+- `m1-q1-future` -> Desired future
+- `m1-q1-quit` -> Quit conditions
+- `m1-q1-reveal` -> Personal synthesis
+- `m1-q1-decision` -> Minimum commitment
+- `m1-q2-complication` -> Perceived deficits
+- `m1-q2-resources` -> Real resources
+- `m1-q2-network` -> Network
+- `m1-q2-capabilities` -> Capabilities
+- `m1-q2-experience` -> Experience
+- `m1-q2-reveal` -> Asset reveal
+- `m1-q2-decision` -> Gap actions
+- `m1-q3-complication` -> Ask readiness
+- `m1-q3-squad` -> Squad
+- `m1-q3-visible` -> Visibility
+- `m1-q3-ask` -> Real-world ask
+- `m1-q3-reveal` -> Confidence reveal
+- `m1-q3-decision` -> Debrief
+- `m1-q4-fear` -> Specific fear
+- `m1-q4-warmup` -> Small ask
+- `m1-q4-stretch` -> Fear challenge
+- `m1-q4-reveal` -> Fear vs. reality
+- `m1-q4-decision` -> Fear audit
+- `m1-big-reveal` -> Transformation synthesis
+- `m1-decision` -> Commitment to move before ready
 
-        <section className="flex w-full items-center px-6 py-12 sm:px-10 lg:w-[520px] lg:px-14 xl:w-[560px]">
-          <div className="w-full max-w-md">
-            <div className="mb-10 lg:hidden">
-              <Link
-                href="/"
-                className="text-xl font-medium tracking-[-0.04em]"
-              >
-                urge
-              </Link>
-            </div>
+## Things user has
 
-            <div className="mb-10 space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">
-                Create your account
-              </p>
+- Commitment
+- maybe an existing idea (opportunity)
+- squad
 
-              <h1 className="text-3xl font-medium tracking-[-0.04em] sm:text-4xl">
-                Start with yourself.
-              </h1>
+## Thoughts on mission 2
 
-              <p className="text-sm leading-6 text-muted-foreground">
-                A few details. Then we get to the part that
-                matters.
-              </p>
-            </div>
+In this mission we want user to explore opportunities, validate them and select one to work on. This includes idea they have and others they are going to discover. The point is to make user very good observers. 
 
-            <RegisterForm />
-          </div>
-        </section>
-      </div>
-    </main>
-  );
-}
+### Situation (mission)
 
-```
-3. app/(platform)/profile/complete/success/page.tsx
-```tsx
-import Link from 'next/link';
+They are committed and have the right motivation and have crossed personal roadblocks
 
-interface ProfileCompleteSuccessPageProps {
-  searchParams: Promise<{
-    intent?: string;
-  }>;
-}
+### Complication (quest1)
 
-export default async function ProfileCompleteSuccessPage({
-  searchParams,
-}: ProfileCompleteSuccessPageProps) {
-  const params = await searchParams;
+To build a solution/business they need to have a problem, what problem will they solve that would be a good business for them
 
-  const intent =
-    params.intent === 'join'
-      ? 'join'
-      : 'trial';
+### Investigation: identify opportunities
 
-  const continueHref =
-    intent === 'join'
-      ? '/checkout?offering=urge-membership'
-      : '/program/welcome?intent=trial';
+(collect as many in 2-4 weeks) I think trick is to make users look in right places 
 
-  return (
-    <main className="min-h-screen">
-      <div className="mx-auto w-full max-w-3xl px-6 py-24">
-        <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-primary">
-          You&apos;re ready
-        </p>
+- **look at their own frustations**: They already have domain expertise in *something* — their job, hobbies, daily routines, parenting, health, commute. The problems they personally experience and understand deeply are often the best starting points, because they know the pain firsthand and can judge whether a solution works. things to observe:
+  
+  - Stuck on hold
+  - Driving across town for something repeatedlyt
+  - Waiting for stuff
+  - Googling something way often
+  - Paying way too much for something
+  - Frustated with something that doesnt work or could work better
 
-        <h1 className="mt-5 max-w-2xl text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-7xl">
-          Your profile is set up.
-        </h1>
+- **Talk to people in a field you know**: Pick an industry they have worked in or understand (nursing, teaching, construction, logistics). Ask 5-10 people and see patterns emerge fast. if they havent worked so far then this becomes irrelevant.
+  
+  - "What's the most annoying part of their day?" 
+  - "What do you waste time on?" 
+  - "What does the user wish existed?" 
 
-        <p className="mt-8 max-w-2xl text-lg leading-8 text-muted-foreground">
-          {intent === 'join'
-            ? 'Your account is ready. The next step is to complete your Urge membership.'
-            : 'Your account is ready. The next step is to start your Urge experience.'}
-        </p>
+- **People around them**: Journalling pain points. phrases to flag :
+  
+  - I wish there was..
+  - I can't believe I have to ..
+  - I've tried everything and nothing works
+  - i just paid x for this and it's terrible 
 
-        <div className="mt-10">
-          <Link
-            href={continueHref}
-            className="inline-flex h-12 items-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
-          >
-            Continue
-          </Link>
-        </div>
-      </div>
-    </main>
-  );
-}
+We can have one opportunity manager with observation feature that user can use for collecting all the opportunities that way we dont have spread it over many quests
 
-```
-4. Register Form Attached
+### Reveal: Patterns from their observation
+
+- theme and topics that emerge
+- clusters
+
+We can use AI for this assessment both for clustering and how these align with who the user is 
+
+### Decision
+
+Drop the opportunities cluster which does not align or just seems off AI can suggest that. They can choose to keep them and continue
+
+
+
+## Quest 2
+
+### Situation
+
+user has x number of opportunities now, which is great
+
+### Complication
+
+Which one do they work on or bet on
+
+### Investigation
+
+Secondary research to evaluate/socre each opportunity
+
+We can have one Opportunity Evaluation component which ask people to evaluate each opportunity for following criteria
+
+1. Pain intensity: Would they describe this as urgent, or just annoying?
+2. Frequency: Does it happen weekly/daily, or once a year?
+3. Existing spend: Are they already paying money or hours to fix it?
+4. Reachability: Can you get 10 of these people on a call this week?
+5. Your edge: Do you understand this better than an outsider?
+6. Testability: Can you test demand in under a month, cheaply?
+
+**Quick Research**
+Demand signals:
+- Google Trends — is search interest rising or falling?
+- Google Keyword Planner / Ubersuggest — how many people search for a solution?
+- Reddit / Quora / niche forums — search the problem phrase, sort by top, read complaints
+- Review mining — 1-star and 3-star reviews on Amazon, G2, app stores, Google Maps for existing solutions. Every complaint is a gap.
+
+Money signals
+- Competitor pricing pages — what do they charge? Is there a free tier? (Free tier = hard to monetize)
+- Upwork / Fiverr — are people already paying freelancers to solve this? At what rate?
+- Job boards (Naukri, LinkedIn, Indeed) — companies hiring for this = budget exists
+- IndiaMART / Justdial — existing supply tells you demand is real
+
+Reachability signals:
+- LinkedIn search — how many people match your target profile? Can you message them?
+- Facebook / WhatsApp groups — how many members? How active?
+Subreddit size — is there a community already gathered?
+
+Trend signals:
+- Crunchbase / Tracxn — is VC money flowing into this space? (Validates market, but also means competition)
+- News — any new regulation, technology, or cultural shift driving this?
+
+### Reveal 
+Score and comparisons
+
+### Decision
+Pick 3 top/exciting oportunities
+
+## Quest 3
+validate the top opportunities: Take top 3 and talk to 5 real people each
+decision: after interviews refine the scores and compare the 3 side by side and pick 1. 
+the idea is to pick one they are going to test. this might not be the final business they end up building.
+
+
+## Overall program flow
+M1: Move Before Ready
+    └── Capacity to act
+         │
+M2: See What Others Miss
+    └── Chosen opportunity + project
+         │
+M3: Put It to the Test
+    └── Demand evidence
+         ├── KILL → back to M2
+         ├── PIVOT → back to M3 start
+         └── PROCEED → M4
+              │
+M4: How Will This Make Money?
+    └── Money model
+         ├── NO VIABLE PRICE → back to M3
+         ├── ECONOMICS BROKEN → back to M2
+         ├── CHANNEL FAILS → back to M4 start
+         └── PROCEED → M5
+              │
+M5: Build the Machine
+    └── Solution + pipeline + first users
+         ├── NO TRACTION → back to M4
+         ├── WRONG SOLUTION → back to M3
+         ├── CAN'T BUILD → back to M5 start
+         └── PROCEED → M6
+              │
+M6: Launch and Operate
+    └── Live, repeatable business
+         ├── NOT REPEATABLE → back to M5
+         ├── OPS BREAK → back to M6 start
+         └── NO SCALE PATH → back to M4
