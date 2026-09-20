@@ -9,39 +9,17 @@ import { Input } from '@/components/ui/input';
 
 import type { ProgramComponentProps } from '@/lib/program/componentRegistry';
 
-export function SituationExplorer({
-  progress,
-  onComplete,
-}: ProgramComponentProps) {
+export function SituationExplorer({ progress, onComplete}: ProgramComponentProps) {
   const saved = progress.payload ?? {};
-
-  const [situation, setSituation] = useState(
-    typeof saved.situation === 'string'
-      ? saved.situation
-      : ''
-  );
-
-  const [idea, setIdea] = useState(
-    typeof saved.idea === 'string'
-      ? saved.idea
-      : ''
-  );
-
-  const [hasIdea, setHasIdea] = useState(
-    typeof saved.hasIdea === 'boolean'
-      ? saved.hasIdea
-      : false
-  );
-
+  const [situation, setSituation] = useState(typeof saved.situation === 'string' ? saved.situation : '');
+  const [idea, setIdea] = useState(typeof saved.idea === 'string' ? saved.idea  : '');
+  const [hasIdea, setHasIdea] = useState( typeof saved.hasIdea === 'boolean' ? saved.hasIdea : false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const canContinue = situation.trim().length >= 10;
 
   async function handleSubmit() {
     if (!canContinue || isSubmitting) return;
-
     setIsSubmitting(true);
-
     try {
       await onComplete({
         situation: situation.trim(),
@@ -54,7 +32,7 @@ export function SituationExplorer({
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-8">
+    <div className="mx-auto w-full space-y-8">
       <div className="space-y-3">
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
           <MapPin className="h-4 w-4" />
@@ -65,7 +43,7 @@ export function SituationExplorer({
           Where are you right now?
         </h2>
 
-        <p className="max-w-xl text-sm leading-6 text-muted-foreground">
+        <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
           There is no right starting point. Maybe you already have an
           idea. Maybe you just know you want to build something.
           Tell us what brought you here.
