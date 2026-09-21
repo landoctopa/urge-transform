@@ -127,10 +127,12 @@ export function hydrateProgramState(state: ProgramHydrationState): void {
                 (item) => ({
                     id: item.id,
                     userId: item.userId,
+                    domain: item.domain,
+                    focus: item.focus,
                     type: item.type,
                     title: item.title,
                     content: item.content,
-                    sourceNodeId: null,
+                    sourceNodeKey: item.sourceNodeKey,
                     observedAt: item.observedAt,
                     metadata: item.metadata,
                     createdAt: item.createdAt,

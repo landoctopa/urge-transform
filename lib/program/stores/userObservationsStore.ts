@@ -1,24 +1,25 @@
 import { atom } from 'nanostores';
 
-import type { Json } from '@/types/supabase';
+import type {
+  Database,
+} from '@/types/supabase';
+
+type ObservationRow =
+  Database['public']['Tables']['user_observations']['Row'];
 
 export interface UserObservation {
-  id: string;
-  userId: string;
-
-  type: string | null;
-  title: string | null;
-
-  content: Json;
-
-  sourceNodeId: string | null;
-
-  observedAt: string | null;
-
-  metadata: Json;
-
-  createdAt: string;
-  updatedAt: string;
+  id: ObservationRow['id'];
+  userId: ObservationRow['user_id'];
+  domain: ObservationRow['domain'];
+  focus: ObservationRow['focus'];
+  type: ObservationRow['type'];
+  title: ObservationRow['title'];
+  content: ObservationRow['content'];
+  sourceNodeKey: string | null;
+  observedAt: ObservationRow['observed_at'];
+  metadata: ObservationRow['metadata'];
+  createdAt: ObservationRow['created_at'];
+  updatedAt: ObservationRow['updated_at'];
 }
 
 export const $userObservationsStore =
