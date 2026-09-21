@@ -57,7 +57,7 @@ export const mission2: ProgramMission = {
         key: 'm2-q1',
       },
       sequence: 2,
-      component: 'why_observation_matters',
+      component: 'opportunity_complication',
       title: 'Stop Looking for Ideas',
       behavioralIntent:
         'Create tension around the habit of trying to invent business ideas instead of noticing problems that already exist.',
