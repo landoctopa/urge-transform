@@ -36,7 +36,8 @@ import { MissionCommitment } from '@/components/program/mission1/MissionCommitme
 // Mission 2
 import { OpportunityStartingPoint } from '@/components/program/mission2/OpportunityStartingPoint';
 import { OpportunityComplication } from '@/components/program/mission2/OpportunityComplication';
-//import { ObservationExplorer } from '@/components/program/mission2/ObservationExplorer';
+
+import { ProblemFocusExplorer } from '@/components/program/mission2/ProblemFocusExplorer';
 //import { OpportunitySynthesis } from '@/components/program/mission2/OpportunitySynthesis';
 //import { OpportunityCommitment } from '@/components/program/mission2/OpportunityCommitment';
 
@@ -94,7 +95,7 @@ export const componentRegistry: Record<
   // Mission 2
   opportunity_starting_point: OpportunityStartingPoint,
   opportunity_complication: OpportunityComplication,
-  //observation_explorer: ObservationExplorer,
+  problem_focus_explorer: ProblemFocusExplorer,
   //opportunity_synthesis: OpportunitySynthesis,
   //opportunity_commitment: OpportunityCommitment,
 };
