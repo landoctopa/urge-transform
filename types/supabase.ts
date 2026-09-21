@@ -708,6 +708,8 @@ export type Database = {
         Row: {
           content: Json
           created_at: string
+          domain: string | null
+          focus: string | null
           id: string
           metadata: Json
           observed_at: string | null
@@ -720,6 +722,8 @@ export type Database = {
         Insert: {
           content?: Json
           created_at?: string
+          domain?: string | null
+          focus?: string | null
           id?: string
           metadata?: Json
           observed_at?: string | null
@@ -732,6 +736,8 @@ export type Database = {
         Update: {
           content?: Json
           created_at?: string
+          domain?: string | null
+          focus?: string | null
           id?: string
           metadata?: Json
           observed_at?: string | null
@@ -759,6 +765,7 @@ export type Database = {
           hypothesis: string | null
           id: string
           metadata: Json
+          observation_ids: string[]
           problem: string | null
           source: string | null
           source_node_id: string | null
@@ -774,6 +781,7 @@ export type Database = {
           hypothesis?: string | null
           id?: string
           metadata?: Json
+          observation_ids?: string[]
           problem?: string | null
           source?: string | null
           source_node_id?: string | null
@@ -789,6 +797,7 @@ export type Database = {
           hypothesis?: string | null
           id?: string
           metadata?: Json
+          observation_ids?: string[]
           problem?: string | null
           source?: string | null
           source_node_id?: string | null
@@ -939,6 +948,7 @@ export type Database = {
           id: string
           metadata: Json
           name: string
+          observation_ids: string[]
           opportunity_id: string | null
           status: string
           updated_at: string
@@ -950,6 +960,7 @@ export type Database = {
           id?: string
           metadata?: Json
           name: string
+          observation_ids?: string[]
           opportunity_id?: string | null
           status?: string
           updated_at?: string
@@ -961,6 +972,7 @@ export type Database = {
           id?: string
           metadata?: Json
           name?: string
+          observation_ids?: string[]
           opportunity_id?: string | null
           status?: string
           updated_at?: string
