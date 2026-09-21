@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Urge — Mission 2 / Quest 1 Mockup</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{colors:{
+background:"oklch(1 0 0)",foreground:"oklch(.145 0 0)",card:"oklch(1 0 0)",
+primary:"oklch(.6461 .194 41.12)","primary-foreground":"oklch(1 0 0)",
+secondary:"oklch(.97 0 0)","secondary-foreground":"oklch(.205 0 0)",
+muted:"oklch(.97 0 0)","muted-foreground":"oklch(.556 0 0)",
+border:"oklch(.922 0 0)",input:"oklch(.922 0 0)",ring:"oklch(.6461 .194 41.12)"
+}}}}
+</script>
+<style>
+:root{--background:oklch(1 0 0);--foreground:oklch(.145 0 0);--primary:oklch(.6461 .194 41.12);--border:oklch(.922 0 0);--radius:.625rem}
+body{background:var(--background);color:var(--foreground)}
+.hide-scrollbar::-webkit-scrollbar{display:none}.hide-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
+</style>
+</head>
+<body class="min-h-screen bg-background text-foreground antialiased">
+<header class="sticky top-0 z-20 border-b border-border bg-white/95 backdrop-blur">
+<div class="mx-auto flex h-16 max-w-4xl items-center justify-between px-4 sm:px-6">
+<div class="flex items-center gap-3">
+<div class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">U</div>
+<div><p class="text-sm font-semibold">Urge</p><p class="text-xs text-muted-foreground">Mission 2 · Discover Opportunities</p></div>
+</div>
+<div class="hidden text-sm text-muted-foreground sm:block">Quest 1 of 4 · Observe</div>
+</div></header>
+
+<main class="mx-auto w-full max-w-4xl px-4 pb-24 sm:px-6">
+<div class="pt-8">
+<div class="mb-3 flex items-center justify-between text-xs font-medium text-muted-foreground"><span>Observe</span><span>1 of 4</span></div>
+<div class="h-1.5 overflow-hidden rounded-full bg-secondary"><div class="h-full w-1/4 rounded-full bg-primary"></div></div>
+</div>
+
+<section class="border-b border-border py-16 sm:py-20">
+<div class="max-w-3xl">
+<p class="mb-5 text-sm font-medium text-primary">Let's start with you</p>
+<h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">You're ready to take action.</h1>
+<div class="mt-6 space-y-4 text-lg leading-8 text-muted-foreground"><p>That's a big step.</p><p>Now comes the next question.</p></div>
+<div class="mt-10 rounded-xl border border-border bg-card p-6 shadow-sm sm:p-8">
+<label class="block text-xl font-medium leading-8 sm:text-2xl">If you were going to start a business, what would you work on?</label>
+<p class="mt-2 text-sm text-muted-foreground">Where would you look for a business opportunity?</p>
+<textarea class="mt-6 min-h-36 w-full resize-none rounded-lg border border-input bg-white p-4 text-base outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20" placeholder="Tell us what you'd do..."></textarea>
+<div class="mt-5 flex justify-end"><button class="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90">Continue</button></div>
+</div></div></section>
+
+<section class="border-b border-border py-16 sm:py-20">
+<div class="max-w-3xl">
+<p class="mb-5 text-sm font-medium text-primary">Let's look at that</p>
+<h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">You said you'd look at AI trends and find something businesses could use.</h2>
+<div class="mt-8 rounded-xl bg-secondary p-6 sm:p-8">
+<p class="text-base leading-7 text-secondary-foreground">That's one way to start. But there's a question worth asking:</p>
+<p class="mt-5 text-xl font-medium leading-8 sm:text-2xl">How would you know whether there's a real problem behind the opportunity?</p>
+</div>
+<p class="mt-8 text-base leading-7 text-muted-foreground">Maybe there's another way to look for opportunities.</p>
+<button class="mt-8 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90">Let's see</button>
+<p class="mt-6 text-xs text-muted-foreground">Prototype: in the real component, this question can be generated from the user's answer.</p>
+</div></section>
+
+<section class="border-b border-border py-16 sm:py-20">
+<div class="max-w-3xl">
+<p class="mb-5 text-sm font-medium text-primary">Try a different starting point</p>
+<h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">Instead of looking for a business idea, try looking for a problem.</h2>
+<div class="mt-8 space-y-5 text-base leading-7 text-muted-foreground">
+<p>Think about the businesses you use every day.</p>
+<p>Someone couldn't find something they needed. Something cost too much. Something took too long. Something didn't work very well. Something was confusing.</p>
+<p>Someone had a problem, and a business found a way to solve it.</p>
+</div>
+<div class="mt-10 rounded-xl border border-primary/20 bg-primary/5 p-6 sm:p-8"><p class="text-xl font-semibold leading-8 sm:text-2xl">At the root of almost every business opportunity, there is a problem.</p></div>
+<div class="mt-14">
+<p class="text-xl font-semibold">So where do you look for problems?</p><p class="mt-2 text-muted-foreground">Here are a few places you can start.</p>
+<div class="hide-scrollbar mt-6 flex snap-x gap-4 overflow-x-auto pb-4">
+<div class="min-w-[280px] snap-start rounded-xl border border-border bg-white p-6 shadow-sm sm:min-w-[310px]"><div class="mb-5 flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-sm font-semibold">01</div><h3 class="text-xl font-semibold">Personal</h3><p class="mt-3 text-sm leading-6 text-muted-foreground">Start with yourself. What keeps annoying you? What do you wish was easier?</p></div>
+<div class="min-w-[280px] snap-start rounded-xl border border-border bg-white p-6 shadow-sm sm:min-w-[310px]"><div class="mb-5 flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-sm font-semibold">02</div><h3 class="text-xl font-semibold">Expertise</h3><p class="mt-3 text-sm leading-6 text-muted-foreground">Look at what you already know. What problems do you notice because of what you've spent time doing?</p></div>
+<div class="min-w-[280px] snap-start rounded-xl border border-border bg-white p-6 shadow-sm sm:min-w-[310px]"><div class="mb-5 flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-sm font-semibold">03</div><h3 class="text-xl font-semibold">People</h3><p class="mt-3 text-sm leading-6 text-muted-foreground">Look at the people around you. What do they complain about, struggle with, or work around?</p></div>
+<div class="min-w-[280px] snap-start rounded-xl border border-border bg-white p-6 shadow-sm sm:min-w-[310px]"><div class="mb-5 flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-sm font-semibold">04</div><h3 class="text-xl font-semibold">Trends</h3><p class="mt-3 text-sm leading-6 text-muted-foreground">Look at what's changing. When something changes, new problems often show up.</p></div>
+<div class="min-w-[280px] snap-start rounded-xl border border-border bg-white p-6 shadow-sm sm:min-w-[310px]"><div class="mb-5 flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-sm font-semibold">05</div><h3 class="text-xl font-semibold">World</h3><p class="mt-3 text-sm leading-6 text-muted-foreground">Look beyond your immediate circle. What problems are people dealing with because of what's happening around them?</p></div>
+</div>
+</div>
+<div class="mt-14 border-t border-border pt-10">
+<p class="text-xl font-semibold">How confident do you feel about spotting problems around you?</p>
+<div class="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-5">
+<button class="rounded-lg border border-input px-4 py-3 text-sm text-muted-foreground hover:border-primary">Not at all</button><button class="rounded-lg border border-input px-4 py-3 text-sm text-muted-foreground hover:border-primary">A little</button><button class="rounded-lg border border-input px-4 py-3 text-sm text-muted-foreground hover:border-primary">Somewhat</button><button class="rounded-lg border border-input px-4 py-3 text-sm text-muted-foreground hover:border-primary">Quite</button><button class="rounded-lg border border-input px-4 py-3 text-sm text-muted-foreground hover:border-primary">Very</button>
+</div></div>
+<button class="mt-8 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90">Let's go observe</button>
+</div></section>
+
+<section class="border-b border-border py-16 sm:py-20">
+<div class="max-w-3xl">
+<p class="mb-5 text-sm font-medium text-primary">Go look</p>
+<h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">What can you notice?</h2>
+<p class="mt-5 text-base leading-7 text-muted-foreground">Pick a place to look. We'll give you a little guidance, but don't overthink it. Just pay attention to things that don't work, feel harder than they should, or make people say, “Why is this so difficult?”</p>
+<label class="mt-10 block text-sm font-medium">Where do you want to look?</label>
+<div class="relative mt-2"><select class="w-full appearance-none rounded-lg border border-input bg-white px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"><option>People</option><option>Personal</option><option>Expertise</option><option>Trends</option><option>World</option></select><span class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">⌄</span></div>
+<div class="mt-6 rounded-xl border border-border bg-secondary p-5 sm:p-6"><div class="flex items-start gap-3"><div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-sm">?</div><div><p class="text-sm font-semibold">A little help for looking at people</p><p class="mt-1 text-sm leading-6 text-muted-foreground">Pay attention to complaints, workarounds, repeated frustrations, and things people have simply learned to put up with.</p><button class="mt-3 text-sm font-medium text-primary hover:underline">Read guide →</button></div></div></div>
+<div class="mt-10 rounded-xl border border-border bg-white p-6 shadow-sm sm:p-8">
+<div class="flex items-center justify-between gap-4"><div><h3 class="text-lg font-semibold">Your observations</h3><p class="mt-1 text-sm text-muted-foreground">Capture anything that makes you stop and think.</p></div><span class="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground">3 captured</span></div>
+<div class="mt-6 space-y-3">
+<div class="rounded-lg border border-border p-4"><div class="flex items-center justify-between"><span class="text-xs font-medium uppercase tracking-wide text-primary">People</span><span class="text-xs text-muted-foreground">Today</span></div><p class="mt-2 text-sm leading-6">Small restaurant owners keep answering the same customer questions on WhatsApp.</p></div>
+<div class="rounded-lg border border-border p-4"><div class="flex items-center justify-between"><span class="text-xs font-medium uppercase tracking-wide text-primary">People</span><span class="text-xs text-muted-foreground">Yesterday</span></div><p class="mt-2 text-sm leading-6">A friend spends a surprising amount of time coordinating home repairs.</p></div>
+<div class="rounded-lg border border-border p-4"><div class="flex items-center justify-between"><span class="text-xs font-medium uppercase tracking-wide text-primary">People</span><span class="text-xs text-muted-foreground">Yesterday</span></div><p class="mt-2 text-sm leading-6">Several parents I know are struggling to find reliable after-school activities nearby.</p></div>
+</div>
+<button class="mt-6 flex w-full items-center justify-center gap-2 rounded-lg border border-primary px-4 py-3 text-sm font-medium text-primary transition hover:bg-primary/5"><span class="text-lg leading-none">+</span>Add observation</button>
+</div>
+<div class="mt-8 rounded-xl border border-dashed border-border p-5 text-sm text-muted-foreground"><span class="font-medium text-foreground">Prototype note:</span> the real version will open the standard ObservationForm with <code class="rounded bg-secondary px-1.5 py-0.5 text-xs">domain="problem"</code> and the selected focus.</div>
+</div></section>
+
+<section class="py-16 sm:py-20">
+<div class="max-w-3xl">
+<p class="mb-5 text-sm font-medium text-primary">Step back</p>
+<h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">Look at what you've found.</h2>
+<p class="mt-5 text-base leading-7 text-muted-foreground">You weren't trying to come up with business ideas. You were just looking for things that people struggle with. Here's what you noticed.</p>
+<div class="mt-10 space-y-4">
+<div class="rounded-xl border border-border bg-white p-6 shadow-sm"><p class="text-sm leading-6">Small restaurant owners keep answering the same customer questions on WhatsApp.</p><div class="mt-4 flex items-center gap-2 text-xs text-muted-foreground"><span class="rounded-full bg-secondary px-2.5 py-1">People</span><span>•</span><span>Customer communication</span></div></div>
+<div class="rounded-xl border border-border bg-white p-6 shadow-sm"><p class="text-sm leading-6">A friend spends a surprising amount of time coordinating home repairs.</p><div class="mt-4 flex items-center gap-2 text-xs text-muted-foreground"><span class="rounded-full bg-secondary px-2.5 py-1">People</span><span>•</span><span>Home services</span></div></div>
+<div class="rounded-xl border border-border bg-white p-6 shadow-sm"><p class="text-sm leading-6">Several parents are struggling to find reliable after-school activities nearby.</p><div class="mt-4 flex items-center gap-2 text-xs text-muted-foreground"><span class="rounded-full bg-secondary px-2.5 py-1">People</span><span>•</span><span>Access</span></div></div>
+</div>
+<div class="mt-10 rounded-xl bg-secondary p-6 sm:p-8"><p class="text-sm font-medium text-muted-foreground">What stands out?</p><p class="mt-4 text-xl font-medium leading-8 sm:text-2xl">You're already seeing problems that you probably would have walked past before.</p><p class="mt-4 text-sm leading-6 text-muted-foreground">There may be something worth exploring here. But we haven't decided that yet.</p></div>
+<div class="mt-10 border-t border-border pt-8"><p class="text-base font-medium">Do you have enough observations to start looking for opportunities?</p><div class="mt-5 flex flex-col gap-3 sm:flex-row"><button class="rounded-lg border border-input px-5 py-3 text-sm font-medium hover:border-primary">I need to look some more</button><button class="rounded-lg bg-primary px-5 py-3 text-sm font-medium text-primary-foreground shadow-sm hover:opacity-90">Yes, I'm ready</button></div></div>
+</div></section>
+</main>
+
+<footer class="border-t border-border bg-secondary/50"><div class="mx-auto flex max-w-4xl items-center justify-between px-4 py-6 text-xs text-muted-foreground sm:px-6"><span>Urge · Discover Opportunities</span><span>Visual prototype · no application logic</span></div></footer>
+</body>
+</html>

@@ -4,6 +4,7 @@ import type {
   ProgramNodeContext,
 } from '@/lib/program/context';
 
+// Mission 1
 import { SituationExplorer } from '@/components/program/mission1/SituationExplorer';
 import { WhyHaventYouStarted } from '@/components/program/mission1/WhyHaventYouStarted';
 import { MotivationExplorer } from '@/components/program/mission1/MotivationExplorer';
@@ -32,6 +33,13 @@ import { FearAudit } from '@/components/program/mission1/FearAudit';
 import { MissionTransformation } from '@/components/program/mission1/MIssionTransformation';
 import { MissionCommitment } from '@/components/program/mission1/MissionCommitment';
 
+// Mission 2
+import { OpportunityStartingPoint } from '@/components/program/mission2/OpportunityStartingPoint';
+//import { WhyObservationMatters } from '@/components/program/mission2/WhyObservationMatters';
+//import { ObservationExplorer } from '@/components/program/mission2/ObservationExplorer';
+//import { OpportunitySynthesis } from '@/components/program/mission2/OpportunitySynthesis';
+//import { OpportunityCommitment } from '@/components/program/mission2/OpportunityCommitment';
+
 export interface ProgramComponentProps {
   node: ProgramNode;
 
@@ -55,6 +63,7 @@ export const componentRegistry: Record<
   string,
   ProgramComponent
 > = {
+  // Mission 1
   situation_explorer: SituationExplorer,
   why_havent_you_started: WhyHaventYouStarted,
   motivation_explorer: MotivationExplorer,
@@ -81,7 +90,13 @@ export const componentRegistry: Record<
   fear_evidence_reveal: FearEvidenceReveal,
   fear_audit: FearAudit,
   mission_transformation: MissionTransformation,
-  mission_commitment: MissionCommitment
+  mission_commitment: MissionCommitment,
+  // Mission 2
+  opportunity_starting_point: OpportunityStartingPoint,
+  //why_observation_matters: WhyObservationMatters,
+  //observation_explorer: ObservationExplorer,
+  //opportunity_synthesis: OpportunitySynthesis,
+  //opportunity_commitment: OpportunityCommitment,
 };
 
 
