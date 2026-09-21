@@ -38,7 +38,7 @@ import { OpportunityStartingPoint } from '@/components/program/mission2/Opportun
 import { OpportunityComplication } from '@/components/program/mission2/OpportunityComplication';
 
 import { ProblemFocusExplorer } from '@/components/program/mission2/ProblemFocusExplorer';
-//import { OpportunitySynthesis } from '@/components/program/mission2/OpportunitySynthesis';
+import { ObservationCapture } from '@/components/program/mission2/ObservationCapture';
 //import { OpportunityCommitment } from '@/components/program/mission2/OpportunityCommitment';
 
 export interface ProgramComponentProps {
@@ -96,7 +96,7 @@ export const componentRegistry: Record<
   opportunity_starting_point: OpportunityStartingPoint,
   opportunity_complication: OpportunityComplication,
   problem_focus_explorer: ProblemFocusExplorer,
-  //opportunity_synthesis: OpportunitySynthesis,
+  observation_capture: ObservationCapture,
   //opportunity_commitment: OpportunityCommitment,
 };
 
