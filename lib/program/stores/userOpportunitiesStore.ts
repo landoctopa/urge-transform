@@ -1,26 +1,27 @@
 import { atom } from 'nanostores';
 
-import type { Json } from '@/types/supabase';
+import type {
+  Database,
+} from '@/types/supabase';
+
+type OpportunityRow =
+  Database['public']['Tables']['user_opportunities']['Row'];
 
 export interface UserOpportunity {
-  id: string;
-  userId: string;
-
-  title: string | null;
-  description: string | null;
-
-  status: string;
-  source: string | null;
-  sourceNodeId: string | null;
-
-  problem: string | null;
-  customer: string | null;
-  hypothesis: string | null;
-
-  metadata: Json;
-
-  createdAt: string;
-  updatedAt: string;
+  id: OpportunityRow['id'];
+  userId: OpportunityRow['user_id'];
+  title: OpportunityRow['title'];
+  description: OpportunityRow['description'];
+  status: OpportunityRow['status'];
+  source: OpportunityRow['source'];
+  sourceNodeKey: string | null;
+  problem: OpportunityRow['problem'];
+  customer: OpportunityRow['customer'];
+  hypothesis: OpportunityRow['hypothesis'];
+  observationIds: OpportunityRow['observation_ids'];
+  metadata: OpportunityRow['metadata'];
+  createdAt: OpportunityRow['created_at'];
+  updatedAt: OpportunityRow['updated_at'];
 }
 
 export interface UserOpportunitiesState {
@@ -70,7 +71,10 @@ export function updateUserOpportunity(
 
     items: current.items.map((item) =>
       item.id === id
-        ? { ...item, ...updates }
+        ? {
+            ...item,
+            ...updates,
+          }
         : item,
     ),
   });

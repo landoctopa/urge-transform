@@ -2,7 +2,6 @@ import 'server-only';
 
 import type {
   Database,
-  Json,
 } from '@/types/supabase';
 
 import {
@@ -26,31 +25,41 @@ export type UserOpportunityStatus =
   | 'archived';
 
 export interface UserOpportunity {
-  id: string;
-  userId: string;
-  title: string | null;
-  description: string | null;
-  status: string;
-  source: string | null;
+  id: OpportunityRow['id'];
+  userId: OpportunityRow['user_id'];
+
+  title: OpportunityRow['title'];
+  description: OpportunityRow['description'];
+  status: OpportunityRow['status'];
+  source: OpportunityRow['source'];
   sourceNodeKey: string | null;
-  problem: string | null;
-  customer: string | null;
-  hypothesis: string | null;
-  metadata: Json;
-  createdAt: string;
-  updatedAt: string;
+
+  problem: OpportunityRow['problem'];
+  customer: OpportunityRow['customer'];
+  hypothesis: OpportunityRow['hypothesis'];
+
+  observationIds: OpportunityRow['observation_ids'];
+
+  metadata: OpportunityRow['metadata'];
+
+  createdAt: OpportunityRow['created_at'];
+  updatedAt: OpportunityRow['updated_at'];
 }
 
 export interface CreateOpportunityInput {
-  title?: string | null;
-  description?: string | null;
-  status?: string;
-  source?: string | null;
+  title?: OpportunityInsert['title'];
+  description?: OpportunityInsert['description'];
+  status?: OpportunityInsert['status'];
+  source?: OpportunityInsert['source'];
   sourceNodeKey?: string | null;
-  problem?: string | null;
-  customer?: string | null;
-  hypothesis?: string | null;
-  metadata?: Json;
+
+  problem?: OpportunityInsert['problem'];
+  customer?: OpportunityInsert['customer'];
+  hypothesis?: OpportunityInsert['hypothesis'];
+
+  observationIds?: OpportunityInsert['observation_ids'];
+
+  metadata?: OpportunityInsert['metadata'];
 }
 
 /* -------------------------------------------------------------------------- */
@@ -64,15 +73,21 @@ function mapOpportunity(
   return {
     id: row.id,
     userId: row.user_id,
+
     title: row.title,
     description: row.description,
     status: row.status,
     source: row.source,
     sourceNodeKey,
+
     problem: row.problem,
     customer: row.customer,
     hypothesis: row.hypothesis,
+
+    observationIds: row.observation_ids,
+
     metadata: row.metadata,
+
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -139,14 +154,20 @@ export async function createUserOpportunity(
 
   const row: OpportunityInsert = {
     user_id: user.auth.id,
+
     title: input.title ?? null,
     description: input.description ?? null,
     status: input.status ?? 'exploring',
     source: input.source ?? null,
     source_node_id: sourceNodeId,
+
     problem: input.problem ?? null,
     customer: input.customer ?? null,
     hypothesis: input.hypothesis ?? null,
+
+    observation_ids:
+      input.observationIds ?? [],
+
     metadata: input.metadata ?? {},
   };
 
